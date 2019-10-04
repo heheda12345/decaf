@@ -1,0 +1,3019 @@
+[4mRunning test set S1[0m
+abstract1.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\abstract1.result
+
++++ S1\output\abstract1.output
+
+@@ -1 +1 @@
+
+-*** Error at (2,19): syntax error
++*** Error at (2,5): syntax error[0m
+abstract3.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\abstract3.result
+
++++ S1\output\abstract3.output
+
+@@ -1 +1 @@
+
+-*** Error at (2,25): syntax error
++*** Error at (2,5): syntax error[0m
+abstract4.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\abstract4.result
+
++++ S1\output\abstract4.output
+
+@@ -1,22 +1 @@
+
+-TopLevel @ (1,1)
+-    List
+-        ClassDef @ (1,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (2,19)
+-                    ABSTRACT
+-                    foo
+-                    TVoid @ (2,14)
+-                    List
+-                        <empty>
+-                    <none>
+-                MethodDef @ (3,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (3,12)
+-                    List
+-                        <empty>
+-                    Block @ (3,24)
+-                        List
+-                            <empty>
++*** Error at (2,5): syntax error[0m
+abstract5.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\abstract5.result
+
++++ S1\output\abstract5.output
+
+@@ -1 +1 @@
+
+-*** Error at (5,12): syntax error
++*** Error at (1,1): syntax error[0m
+abstract8.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\abstract8.result
+
++++ S1\output\abstract8.output
+
+@@ -1,92 +1 @@
+
+-TopLevel @ (1,10)
+-    List
+-        ClassDef @ (1,10)
+-            ABSTRACT
+-            Abstract
+-            <none>
+-            List
+-                VarDef @ (2,9)
+-                    TInt @ (2,5)
+-                    v
+-                    <none>
+-                MethodDef @ (3,17)
+-                    STATIC
+-                    s
+-                    TVoid @ (3,12)
+-                    List
+-                        <empty>
+-                    Block @ (3,21)
+-                        List
+-                            <empty>
+-                MethodDef @ (4,18)
+-                    ABSTRACT
+-                    a
+-                    TInt @ (4,14)
+-                    List
+-                        <empty>
+-                    <none>
+-                MethodDef @ (5,9)
+-                    m
+-                    TInt @ (5,5)
+-                    List
+-                        <empty>
+-                    Block @ (5,13)
+-                        List
+-                            Return @ (5,15)
+-                                IntLit @ (5,22)
+-                                    0
+-        ClassDef @ (8,1)
+-            Concrete
+-            Abstract
+-            List
+-                VarDef @ (9,9)
+-                    TInt @ (9,5)
+-                    v
+-                    <none>
+-                MethodDef @ (10,17)
+-                    STATIC
+-                    s
+-                    TVoid @ (10,12)
+-                    List
+-                        <empty>
+-                    Block @ (10,21)
+-                        List
+-                            <empty>
+-                MethodDef @ (11,9)
+-                    a
+-                    TInt @ (11,5)
+-                    List
+-                        <empty>
+-                    Block @ (11,13)
+-                        List
+-                            Return @ (11,15)
+-                                IntLit @ (11,22)
+-                                    1
+-                MethodDef @ (12,9)
+-                    m
+-                    TInt @ (12,5)
+-                    List
+-                        <empty>
+-                    Block @ (12,13)
+-                        List
+-                            Return @ (12,15)
+-                                IntLit @ (12,22)
+-                                    0
+-        ClassDef @ (15,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (16,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (16,12)
+-                    List
+-                        <empty>
+-                    Block @ (16,24)
+-                        List
+-                            LocalVarDef @ (17,24)
+-                                TClass @ (17,9)
+-                                    Abstract
+-                                a
+-                                NewClass @ (17,28)
+-                                    Concrete
++*** Error at (1,1): syntax error[0m
+error1.decaf  ...  [32mCORRECT[0m
+error2.decaf  ...  [32mCORRECT[0m
+error3.decaf  ...  [32mCORRECT[0m
+error4.decaf  ...  [32mCORRECT[0m
+error5.decaf  ...  [32mCORRECT[0m
+error6.decaf  ...  [32mCORRECT[0m
+fibonacci.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\fibonacci.result
+
++++ S1\output\fibonacci.output
+
+@@ -36,11 +36,10 @@
+
+                                         Print @ (11,13)
+                                             List
+                                                 Call @ (11,25)
+-                                                    VarSel @ (11,22)
+-                                                        VarSel @ (11,20)
+-                                                            <none>
+-                                                            F
+-                                                        get
++                                                    VarSel @ (11,20)
++                                                        <none>
++                                                        F
++                                                    get
+                                                     List
+                                                         VarSel @ (11,26)
+                                                             <none>
+@@ -66,11 +65,10 @@
+
+                             Print @ (16,9)
+                                 List
+                                     Call @ (16,21)
+-                                        VarSel @ (16,18)
+-                                            VarSel @ (16,16)
+-                                                <none>
+-                                                F
+-                                            get
++                                        VarSel @ (16,16)
++                                            <none>
++                                            F
++                                        get
+                                         List
+                                             VarSel @ (16,22)
+                                                 <none>
+@@ -109,9 +107,8 @@
+
+                                 Binary @ (27,31)
+                                     ADD
+                                     Call @ (27,19)
+-                                        VarSel @ (27,16)
+-                                            <none>
+-                                            get
++                                        <none>
++                                        get
+                                         List
+                                             Binary @ (27,26)
+                                                 SUB
+@@ -121,9 +118,8 @@
+
+                                                 IntLit @ (27,28)
+                                                     1
+                                     Call @ (27,36)
+-                                        VarSel @ (27,33)
+-                                            <none>
+-                                            get
++                                        <none>
++                                        get
+                                         List
+                                             Binary @ (27,43)
+                                                 SUB[0m
+lambda1.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda1.result
+
++++ S1\output\lambda1.output
+
+@@ -1,156 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (4,12)
+-                    List
+-                        <empty>
+-                    Block @ (4,24)
+-                        List
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                y
+-                                IntLit @ (5,17)
+-                                    0
+-                            LocalVarDef @ (7,13)
+-                                <none>
+-                                f
+-                                Lambda @ (7,17)
+-                                    List
+-                                        LocalVarDef @ (7,26)
+-                                            TInt @ (7,22)
+-                                            x
+-                                            <none>
+-                                    Binary @ (7,34)
+-                                        ADD
+-                                        VarSel @ (7,32)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (7,36)
+-                                            1
+-                            LocalVarDef @ (8,13)
+-                                <none>
+-                                a
+-                                Lambda @ (8,17)
+-                                    List
+-                                        LocalVarDef @ (8,26)
+-                                            TInt @ (8,22)
+-                                            x
+-                                            <none>
+-                                    Block @ (8,29)
+-                                        List
+-                                            Print @ (8,31)
+-                                                List
+-                                                    Call @ (8,38)
+-                                                        VarSel @ (8,37)
+-                                                            <none>
+-                                                            f
+-                                                        List
+-                                                            Binary @ (8,41)
+-                                                                ADD
+-                                                                VarSel @ (8,39)
+-                                                                    <none>
+-                                                                    x
+-                                                                VarSel @ (8,43)
+-                                                                    <none>
+-                                                                    y
+-                            ExprEval @ (9,10)
+-                                Call @ (9,10)
+-                                    VarSel @ (9,9)
+-                                        <none>
+-                                        a
+-                                    List
+-                                        Call @ (9,12)
+-                                            VarSel @ (9,11)
+-                                                <none>
+-                                                f
+-                                            List
+-                                                IntLit @ (9,13)
+-                                                    120
+-                            ExprEval @ (10,10)
+-                                Call @ (10,10)
+-                                    VarSel @ (10,9)
+-                                        <none>
+-                                        a
+-                                    List
+-                                        IntLit @ (10,11)
+-                                            13
+-                            LocalVarDef @ (12,18)
+-                                TLambda @ (12,9)
+-                                    TInt @ (12,9)
+-                                    List
+-                                        TInt @ (12,13)
+-                                f1
+-                                Lambda @ (12,23)
+-                                    List
+-                                        LocalVarDef @ (12,32)
+-                                            TInt @ (12,28)
+-                                            x
+-                                            <none>
+-                                    Binary @ (12,40)
+-                                        ADD
+-                                        VarSel @ (12,38)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (12,42)
+-                                            1
+-                            LocalVarDef @ (13,24)
+-                                TLambda @ (13,9)
+-                                    TVoid @ (13,9)
+-                                    List
+-                                        TInt @ (13,14)
+-                                        TInt @ (13,19)
+-                                a1
+-                                Lambda @ (13,29)
+-                                    List
+-                                        LocalVarDef @ (13,38)
+-                                            TInt @ (13,34)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (13,45)
+-                                            TInt @ (13,41)
+-                                            y
+-                                            <none>
+-                                    Block @ (13,48)
+-                                        List
+-                                            Print @ (13,50)
+-                                                List
+-                                                    Call @ (13,57)
+-                                                        VarSel @ (13,56)
+-                                                            <none>
+-                                                            f
+-                                                        List
+-                                                            Binary @ (13,60)
+-                                                                ADD
+-                                                                VarSel @ (13,58)
+-                                                                    <none>
+-                                                                    x
+-                                                                VarSel @ (13,62)
+-                                                                    <none>
+-                                                                    y
+-                            ExprEval @ (14,11)
+-                                Call @ (14,11)
+-                                    VarSel @ (14,9)
+-                                        <none>
+-                                        a1
+-                                    List
+-                                        Call @ (14,14)
+-                                            VarSel @ (14,12)
+-                                                <none>
+-                                                f1
+-                                            List
+-                                                IntLit @ (14,15)
+-                                                    120
+-                            ExprEval @ (15,11)
+-                                Call @ (15,11)
+-                                    VarSel @ (15,9)
+-                                        <none>
+-                                        a1
+-                                    List
+-                                        IntLit @ (15,12)
+-                                            13
++*** Error at (5,13): syntax error[0m
+lambda2.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda2.result
+
++++ S1\output\lambda2.output
+
+@@ -1,85 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    apply
+-                    TVoid @ (4,12)
+-                    List
+-                        LocalVarDef @ (4,32)
+-                            TLambda @ (4,23)
+-                                TInt @ (4,23)
+-                                List
+-                                    TInt @ (4,27)
+-                            f
+-                            <none>
+-                        LocalVarDef @ (4,39)
+-                            TInt @ (4,35)
+-                            x
+-                            <none>
+-                    Block @ (4,42)
+-                        List
+-                            Print @ (5,9)
+-                                List
+-                                    Call @ (5,16)
+-                                        VarSel @ (5,15)
+-                                            <none>
+-                                            f
+-                                        List
+-                                            VarSel @ (5,17)
+-                                                <none>
+-                                                x
+-                MethodDef @ (7,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (7,12)
+-                    List
+-                        <empty>
+-                    Block @ (7,24)
+-                        List
+-                            LocalVarDef @ (8,13)
+-                                <none>
+-                                y
+-                                IntLit @ (8,17)
+-                                    0
+-                            LocalVarDef @ (9,13)
+-                                <none>
+-                                f
+-                                Lambda @ (9,17)
+-                                    List
+-                                        LocalVarDef @ (9,26)
+-                                            TInt @ (9,22)
+-                                            x
+-                                            <none>
+-                                    Binary @ (9,34)
+-                                        ADD
+-                                        VarSel @ (9,32)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (9,36)
+-                                            1
+-                            ExprEval @ (10,14)
+-                                Call @ (10,14)
+-                                    VarSel @ (10,9)
+-                                        <none>
+-                                        apply
+-                                    List
+-                                        VarSel @ (10,15)
+-                                            <none>
+-                                            f
+-                                        IntLit @ (10,18)
+-                                            12
+-                            ExprEval @ (11,14)
+-                                Call @ (11,14)
+-                                    VarSel @ (11,9)
+-                                        <none>
+-                                        apply
+-                                    List
+-                                        VarSel @ (11,15)
+-                                            <none>
+-                                            f
+-                                        IntLit @ (11,18)
+-                                            13
++*** Error at (4,26): syntax error[0m
+lambda4.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda4.result
+
++++ S1\output\lambda4.output
+
+@@ -1,71 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,21)
+-                    STATIC
+-                    genadd
+-                    TLambda @ (4,12)
+-                        TInt @ (4,12)
+-                        List
+-                            TInt @ (4,16)
+-                    List
+-                        LocalVarDef @ (4,32)
+-                            TInt @ (4,28)
+-                            v
+-                            <none>
+-                    Block @ (4,35)
+-                        List
+-                            Return @ (5,9)
+-                                Lambda @ (5,16)
+-                                    List
+-                                        LocalVarDef @ (5,25)
+-                                            TInt @ (5,21)
+-                                            x
+-                                            <none>
+-                                    Binary @ (5,32)
+-                                        ADD
+-                                        VarSel @ (5,31)
+-                                            <none>
+-                                            x
+-                                        VarSel @ (5,33)
+-                                            <none>
+-                                            v
+-                MethodDef @ (8,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (8,12)
+-                    List
+-                        <empty>
+-                    Block @ (8,24)
+-                        List
+-                            LocalVarDef @ (9,13)
+-                                <none>
+-                                f
+-                                Call @ (9,23)
+-                                    VarSel @ (9,17)
+-                                        <none>
+-                                        genadd
+-                                    List
+-                                        IntLit @ (9,24)
+-                                            23
+-                            Print @ (10,9)
+-                                List
+-                                    Call @ (10,16)
+-                                        VarSel @ (10,15)
+-                                            <none>
+-                                            f
+-                                        List
+-                                            IntLit @ (10,17)
+-                                                24
+-                            Print @ (11,9)
+-                                List
+-                                    Call @ (11,16)
+-                                        VarSel @ (11,15)
+-                                            <none>
+-                                            f
+-                                        List
+-                                            IntLit @ (11,17)
+-                                                26
++*** Error at (4,15): syntax error[0m
+lambda6.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda6.result
+
++++ S1\output\lambda6.output
+
+@@ -1,180 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (4,12)
+-                    List
+-                        <empty>
+-                    Block @ (4,24)
+-                        List
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                addn
+-                                Lambda @ (5,20)
+-                                    List
+-                                        LocalVarDef @ (5,29)
+-                                            TInt @ (5,25)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (5,36)
+-                                            TInt @ (5,32)
+-                                            y
+-                                            <none>
+-                                    Binary @ (5,41)
+-                                        ADD
+-                                        VarSel @ (5,40)
+-                                            <none>
+-                                            x
+-                                        VarSel @ (5,42)
+-                                            <none>
+-                                            y
+-                            LocalVarDef @ (6,23)
+-                                TLambda @ (6,9)
+-                                    TLambda @ (6,9)
+-                                        TInt @ (6,9)
+-                                        List
+-                                            TInt @ (6,13)
+-                                    List
+-                                        TInt @ (6,18)
+-                                addc
+-                                Lambda @ (6,30)
+-                                    List
+-                                        LocalVarDef @ (6,39)
+-                                            TInt @ (6,35)
+-                                            x
+-                                            <none>
+-                                    Lambda @ (6,45)
+-                                        List
+-                                            LocalVarDef @ (6,54)
+-                                                TInt @ (6,50)
+-                                                y
+-                                                <none>
+-                                        Binary @ (6,61)
+-                                            ADD
+-                                            VarSel @ (6,60)
+-                                                <none>
+-                                                x
+-                                            VarSel @ (6,62)
+-                                                <none>
+-                                                y
+-                            LocalVarDef @ (7,13)
+-                                <none>
+-                                badadd2
+-                                Lambda @ (7,23)
+-                                    List
+-                                        LocalVarDef @ (7,32)
+-                                            TInt @ (7,28)
+-                                            x
+-                                            <none>
+-                                    Lambda @ (7,38)
+-                                        List
+-                                            LocalVarDef @ (7,47)
+-                                                TInt @ (7,43)
+-                                                y
+-                                                <none>
+-                                        Binary @ (7,54)
+-                                            ADD
+-                                            VarSel @ (7,53)
+-                                                <none>
+-                                                x
+-                                            Call @ (7,57)
+-                                                VarSel @ (7,55)
+-                                                    <none>
+-                                                    y
+-                                                List
+-                                                    IntLit @ (7,58)
+-                                                        2
+-                            LocalVarDef @ (8,13)
+-                                <none>
+-                                add2
+-                                Call @ (8,56)
+-                                    Lambda @ (8,21)
+-                                        List
+-                                            LocalVarDef @ (8,30)
+-                                                TInt @ (8,26)
+-                                                x
+-                                                <none>
+-                                        Lambda @ (8,36)
+-                                            List
+-                                                LocalVarDef @ (8,45)
+-                                                    TInt @ (8,41)
+-                                                    y
+-                                                    <none>
+-                                            Binary @ (8,52)
+-                                                ADD
+-                                                VarSel @ (8,51)
+-                                                    <none>
+-                                                    x
+-                                                VarSel @ (8,53)
+-                                                    <none>
+-                                                    y
+-                                    List
+-                                        IntLit @ (8,57)
+-                                            2
+-                            LocalVarDef @ (9,13)
+-                                <none>
+-                                add2c
+-                                Call @ (9,25)
+-                                    VarSel @ (9,21)
+-                                        <none>
+-                                        addc
+-                                    List
+-                                        IntLit @ (9,26)
+-                                            2
+-                            LocalVarDef @ (10,13)
+-                                <none>
+-                                badadd2c
+-                                Call @ (10,28)
+-                                    VarSel @ (10,24)
+-                                        <none>
+-                                        addn
+-                                    List
+-                                        IntLit @ (10,29)
+-                                            2
+-                            Print @ (11,9)
+-                                List
+-                                    Call @ (11,19)
+-                                        VarSel @ (11,15)
+-                                            <none>
+-                                            addn
+-                                        List
+-                                            IntLit @ (11,20)
+-                                                2
+-                                            IntLit @ (11,23)
+-                                                3
+-                            Print @ (12,9)
+-                                List
+-                                    Call @ (12,22)
+-                                        Call @ (12,19)
+-                                            VarSel @ (12,15)
+-                                                <none>
+-                                                addc
+-                                            List
+-                                                IntLit @ (12,20)
+-                                                    2
+-                                        List
+-                                            IntLit @ (12,23)
+-                                                3
+-                            Print @ (13,9)
+-                                List
+-                                    Call @ (13,19)
+-                                        VarSel @ (13,15)
+-                                            <none>
+-                                            add2
+-                                        List
+-                                            IntLit @ (13,20)
+-                                                3
+-                            Print @ (14,9)
+-                                List
+-                                    Call @ (14,20)
+-                                        VarSel @ (14,15)
+-                                            <none>
+-                                            add2c
+-                                        List
+-                                            IntLit @ (14,21)
+-                                                3
++*** Error at (5,13): syntax error[0m
+lambda7.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda7.result
+
++++ S1\output\lambda7.output
+
+@@ -1,357 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            A
+-            <none>
+-            List
+-                MethodDef @ (4,9)
+-                    f
+-                    TInt @ (4,5)
+-                    List
+-                        LocalVarDef @ (4,15)
+-                            TInt @ (4,11)
+-                            x
+-                            <none>
+-                    Block @ (4,18)
+-                        List
+-                            Return @ (4,20)
+-                                Binary @ (4,29)
+-                                    SUB
+-                                    VarSel @ (4,27)
+-                                        <none>
+-                                        x
+-                                    IntLit @ (4,31)
+-                                        1
+-                MethodDef @ (5,16)
+-                    STATIC
+-                    g
+-                    TInt @ (5,12)
+-                    List
+-                        LocalVarDef @ (5,22)
+-                            TInt @ (5,18)
+-                            x
+-                            <none>
+-                    Block @ (5,25)
+-                        List
+-                            Return @ (5,27)
+-                                Binary @ (5,36)
+-                                    ADD
+-                                    VarSel @ (5,34)
+-                                        <none>
+-                                        x
+-                                    IntLit @ (5,38)
+-                                        1
+-                VarDef @ (6,14)
+-                    TLambda @ (6,5)
+-                        TInt @ (6,5)
+-                        List
+-                            TInt @ (6,9)
+-                    m
+-                    <none>
+-        ClassDef @ (9,1)
+-            Main
+-            <none>
+-            List
+-                VarDef @ (10,9)
+-                    TInt @ (10,5)
+-                    v
+-                    <none>
+-                VarDef @ (11,14)
+-                    TLambda @ (11,5)
+-                        TInt @ (11,5)
+-                        List
+-                            TInt @ (11,9)
+-                    mfunc
+-                    <none>
+-                MethodDef @ (12,16)
+-                    STATIC
+-                    ms
+-                    TInt @ (12,12)
+-                    List
+-                        LocalVarDef @ (12,23)
+-                            TInt @ (12,19)
+-                            x
+-                            <none>
+-                    Block @ (12,26)
+-                        List
+-                            Return @ (12,28)
+-                                Binary @ (12,37)
+-                                    ADD
+-                                    VarSel @ (12,35)
+-                                        <none>
+-                                        x
+-                                    IntLit @ (12,39)
+-                                        10
+-                MethodDef @ (13,9)
+-                    mf
+-                    TInt @ (13,5)
+-                    List
+-                        LocalVarDef @ (13,16)
+-                            TInt @ (13,12)
+-                            x
+-                            <none>
+-                    Block @ (13,19)
+-                        List
+-                            Return @ (13,21)
+-                                Binary @ (13,30)
+-                                    ADD
+-                                    VarSel @ (13,28)
+-                                        <none>
+-                                        x
+-                                    VarSel @ (13,32)
+-                                        <none>
+-                                        v
+-                MethodDef @ (15,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (15,12)
+-                    List
+-                        <empty>
+-                    Block @ (15,24)
+-                        List
+-                            ExprEval @ (16,28)
+-                                Call @ (16,28)
+-                                    VarSel @ (16,20)
+-                                        NewClass @ (16,9)
+-                                            Main
+-                                        trueMain
+-                                    List
+-                                        <empty>
+-                MethodDef @ (19,10)
+-                    trueMain
+-                    TVoid @ (19,5)
+-                    List
+-                        <empty>
+-                    Block @ (19,21)
+-                        List
+-                            LocalVarDef @ (20,13)
+-                                <none>
+-                                a
+-                                NewClass @ (20,17)
+-                                    A
+-                            Assign @ (21,13)
+-                                VarSel @ (21,11)
+-                                    VarSel @ (21,9)
+-                                        <none>
+-                                        a
+-                                    m
+-                                Lambda @ (21,15)
+-                                    List
+-                                        LocalVarDef @ (21,24)
+-                                            TInt @ (21,20)
+-                                            x
+-                                            <none>
+-                                    Binary @ (21,31)
+-                                        ADD
+-                                        VarSel @ (21,30)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (21,32)
+-                                            2
+-                            LocalVarDef @ (23,18)
+-                                TLambda @ (23,9)
+-                                    TInt @ (23,9)
+-                                    List
+-                                        TInt @ (23,13)
+-                                f
+-                                <none>
+-                            Assign @ (24,11)
+-                                VarSel @ (24,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (24,13)
+-                                    <none>
+-                                    ms
+-                            Assign @ (25,11)
+-                                VarSel @ (25,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (25,18)
+-                                    VarSel @ (25,13)
+-                                        <none>
+-                                        Main
+-                                    ms
+-                            Assign @ (26,11)
+-                                VarSel @ (26,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (26,18)
+-                                    This @ (26,13)
+-                                    mf
+-                            Assign @ (27,11)
+-                                VarSel @ (27,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (27,18)
+-                                    This @ (27,13)
+-                                    ms
+-                            Assign @ (28,11)
+-                                VarSel @ (28,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (28,13)
+-                                    <none>
+-                                    mf
+-                            Assign @ (30,11)
+-                                VarSel @ (30,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (30,15)
+-                                    VarSel @ (30,13)
+-                                        <none>
+-                                        a
+-                                    f
+-                            Assign @ (31,11)
+-                                VarSel @ (31,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (31,15)
+-                                    VarSel @ (31,13)
+-                                        <none>
+-                                        a
+-                                    g
+-                            Assign @ (32,11)
+-                                VarSel @ (32,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (32,15)
+-                                    VarSel @ (32,13)
+-                                        <none>
+-                                        a
+-                                    m
+-                            Assign @ (33,11)
+-                                VarSel @ (33,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (33,15)
+-                                    VarSel @ (33,13)
+-                                        <none>
+-                                        A
+-                                    f
+-                            Assign @ (34,11)
+-                                VarSel @ (34,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (34,15)
+-                                    VarSel @ (34,13)
+-                                        <none>
+-                                        A
+-                                    g
+-                            Assign @ (35,11)
+-                                VarSel @ (35,9)
+-                                    <none>
+-                                    f
+-                                VarSel @ (35,15)
+-                                    VarSel @ (35,13)
+-                                        <none>
+-                                        A
+-                                    m
+-                            LocalVarDef @ (37,30)
+-                                TLambda @ (37,9)
+-                                    TInt @ (37,9)
+-                                    List
+-                                        TClass @ (37,13)
+-                                            Main
+-                                        TInt @ (37,25)
+-                                g
+-                                <none>
+-                            Assign @ (38,11)
+-                                VarSel @ (38,9)
+-                                    <none>
+-                                    g
+-                                VarSel @ (38,13)
+-                                    <none>
+-                                    ms
+-                            Assign @ (39,11)
+-                                VarSel @ (39,9)
+-                                    <none>
+-                                    g
+-                                VarSel @ (39,18)
+-                                    VarSel @ (39,13)
+-                                        <none>
+-                                        Main
+-                                    ms
+-                            Assign @ (40,11)
+-                                VarSel @ (40,9)
+-                                    <none>
+-                                    g
+-                                VarSel @ (40,18)
+-                                    This @ (40,13)
+-                                    mf
+-                            Assign @ (41,11)
+-                                VarSel @ (41,9)
+-                                    <none>
+-                                    g
+-                                VarSel @ (41,18)
+-                                    This @ (41,13)
+-                                    ms
+-                            Assign @ (42,11)
+-                                VarSel @ (42,9)
+-                                    <none>
+-                                    g
+-                                VarSel @ (42,13)
+-                                    <none>
+-                                    mf
+-                            LocalVarDef @ (44,27)
+-                                TLambda @ (44,9)
+-                                    TInt @ (44,9)
+-                                    List
+-                                        TClass @ (44,13)
+-                                            A
+-                                        TInt @ (44,22)
+-                                h
+-                                <none>
+-                            Assign @ (45,11)
+-                                VarSel @ (45,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (45,15)
+-                                    VarSel @ (45,13)
+-                                        <none>
+-                                        a
+-                                    f
+-                            Assign @ (46,11)
+-                                VarSel @ (46,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (46,15)
+-                                    VarSel @ (46,13)
+-                                        <none>
+-                                        a
+-                                    g
+-                            Assign @ (47,11)
+-                                VarSel @ (47,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (47,15)
+-                                    VarSel @ (47,13)
+-                                        <none>
+-                                        a
+-                                    m
+-                            Assign @ (48,11)
+-                                VarSel @ (48,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (48,15)
+-                                    VarSel @ (48,13)
+-                                        <none>
+-                                        A
+-                                    f
+-                            Assign @ (49,11)
+-                                VarSel @ (49,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (49,15)
+-                                    VarSel @ (49,13)
+-                                        <none>
+-                                        A
+-                                    g
+-                            Assign @ (50,11)
+-                                VarSel @ (50,9)
+-                                    <none>
+-                                    h
+-                                VarSel @ (50,15)
+-                                    VarSel @ (50,13)
+-                                        <none>
+-                                        A
+-                                    m
++*** Error at (6,8): syntax error[0m
+lambda8.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda8.result
+
++++ S1\output\lambda8.output
+
+@@ -1,705 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (4,12)
+-                    List
+-                        <empty>
+-                    Block @ (4,24)
+-                        List
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                intarr_map
+-                                Lambda @ (5,26)
+-                                    List
+-                                        LocalVarDef @ (5,40)
+-                                            TLambda @ (5,31)
+-                                                TInt @ (5,31)
+-                                                List
+-                                                    TInt @ (5,35)
+-                                            f
+-                                            <none>
+-                                    Lambda @ (5,46)
+-                                        List
+-                                            LocalVarDef @ (5,57)
+-                                                TArray @ (5,51)
+-                                                    TInt @ (5,51)
+-                                                arr
+-                                                <none>
+-                                        Block @ (5,62)
+-                                            List
+-                                                LocalVarDef @ (6,17)
+-                                                    <none>
+-                                                    l
+-                                                    Call @ (6,31)
+-                                                        VarSel @ (6,25)
+-                                                            VarSel @ (6,21)
+-                                                                <none>
+-                                                                arr
+-                                                            length
+-                                                        List
+-                                                            <empty>
+-                                                LocalVarDef @ (7,17)
+-                                                    <none>
+-                                                    rv
+-                                                    NewArray @ (7,22)
+-                                                        TInt @ (7,26)
+-                                                        VarSel @ (7,30)
+-                                                            <none>
+-                                                            l
+-                                                For @ (8,13)
+-                                                    LocalVarDef @ (8,22)
+-                                                        <none>
+-                                                        i
+-                                                        IntLit @ (8,26)
+-                                                            0
+-                                                    Binary @ (8,31)
+-                                                        LT
+-                                                        VarSel @ (8,29)
+-                                                            <none>
+-                                                            i
+-                                                        VarSel @ (8,33)
+-                                                            <none>
+-                                                            l
+-                                                    Assign @ (8,38)
+-                                                        VarSel @ (8,36)
+-                                                            <none>
+-                                                            i
+-                                                        Binary @ (8,42)
+-                                                            ADD
+-                                                            VarSel @ (8,40)
+-                                                                <none>
+-                                                                i
+-                                                            IntLit @ (8,44)
+-                                                                1
+-                                                    Block @ (8,53)
+-                                                        List
+-                                                            Assign @ (8,53)
+-                                                                IndexSel @ (8,49)
+-                                                                    VarSel @ (8,47)
+-                                                                        <none>
+-                                                                        rv
+-                                                                    VarSel @ (8,50)
+-                                                                        <none>
+-                                                                        i
+-                                                                Call @ (8,56)
+-                                                                    VarSel @ (8,55)
+-                                                                        <none>
+-                                                                        f
+-                                                                    List
+-                                                                        IndexSel @ (8,60)
+-                                                                            VarSel @ (8,57)
+-                                                                                <none>
+-                                                                                arr
+-                                                                            VarSel @ (8,61)
+-                                                                                <none>
+-                                                                                i
+-                                                Return @ (9,13)
+-                                                    VarSel @ (9,20)
+-                                                        <none>
+-                                                        rv
+-                            LocalVarDef @ (12,13)
+-                                <none>
+-                                print_filter
+-                                Lambda @ (12,28)
+-                                    List
+-                                        LocalVarDef @ (12,43)
+-                                            TLambda @ (12,33)
+-                                                TBool @ (12,33)
+-                                                List
+-                                                    TInt @ (12,38)
+-                                            f
+-                                            <none>
+-                                    Lambda @ (12,49)
+-                                        List
+-                                            LocalVarDef @ (12,60)
+-                                                TArray @ (12,54)
+-                                                    TInt @ (12,54)
+-                                                arr
+-                                                <none>
+-                                        Block @ (12,65)
+-                                            List
+-                                                For @ (13,13)
+-                                                    LocalVarDef @ (13,22)
+-                                                        <none>
+-                                                        i
+-                                                        IntLit @ (13,26)
+-                                                            0
+-                                                    Binary @ (13,31)
+-                                                        LT
+-                                                        VarSel @ (13,29)
+-                                                            <none>
+-                                                            i
+-                                                        VarSel @ (13,33)
+-                                                            <none>
+-                                                            l
+-                                                    Assign @ (13,38)
+-                                                        VarSel @ (13,36)
+-                                                            <none>
+-                                                            i
+-                                                        Binary @ (13,42)
+-                                                            ADD
+-                                                            VarSel @ (13,40)
+-                                                                <none>
+-                                                                i
+-                                                            IntLit @ (13,44)
+-                                                                1
+-                                                    Block @ (14,17)
+-                                                        List
+-                                                            If @ (14,17)
+-                                                                Call @ (14,22)
+-                                                                    VarSel @ (14,21)
+-                                                                        <none>
+-                                                                        f
+-                                                                    List
+-                                                                        IndexSel @ (14,26)
+-                                                                            VarSel @ (14,23)
+-                                                                                <none>
+-                                                                                arr
+-                                                                            VarSel @ (14,27)
+-                                                                                <none>
+-                                                                                i
+-                                                                Block @ (14,32)
+-                                                                    List
+-                                                                        Print @ (14,32)
+-                                                                            List
+-                                                                                IndexSel @ (14,41)
+-                                                                                    VarSel @ (14,38)
+-                                                                                        <none>
+-                                                                                        arr
+-                                                                                    VarSel @ (14,42)
+-                                                                                        <none>
+-                                                                                        i
+-                                                                <none>
+-                                                Print @ (15,13)
+-                                                    List
+-                                                        StringLit @ (15,19)
+-                                                            "\n"
+-                            LocalVarDef @ (18,13)
+-                                <none>
+-                                print_arr
+-                                Lambda @ (18,25)
+-                                    List
+-                                        LocalVarDef @ (18,36)
+-                                            TArray @ (18,30)
+-                                                TInt @ (18,30)
+-                                            arr
+-                                            <none>
+-                                    Block @ (18,41)
+-                                        List
+-                                            For @ (19,13)
+-                                                LocalVarDef @ (19,22)
+-                                                    <none>
+-                                                    i
+-                                                    IntLit @ (19,26)
+-                                                        0
+-                                                Binary @ (19,31)
+-                                                    LT
+-                                                    VarSel @ (19,29)
+-                                                        <none>
+-                                                        i
+-                                                    Call @ (19,41)
+-                                                        VarSel @ (19,35)
+-                                                            VarSel @ (19,33)
+-                                                                <none>
+-                                                                a
+-                                                            length
+-                                                        List
+-                                                            <empty>
+-                                                Assign @ (19,47)
+-                                                    VarSel @ (19,45)
+-                                                        <none>
+-                                                        i
+-                                                    Binary @ (19,51)
+-                                                        ADD
+-                                                        VarSel @ (19,49)
+-                                                            <none>
+-                                                            i
+-                                                        IntLit @ (19,53)
+-                                                            1
+-                                                Block @ (20,17)
+-                                                    List
+-                                                        Print @ (20,17)
+-                                                            List
+-                                                                IndexSel @ (20,24)
+-                                                                    VarSel @ (20,23)
+-                                                                        <none>
+-                                                                        a
+-                                                                    VarSel @ (20,25)
+-                                                                        <none>
+-                                                                        i
+-                                            Print @ (21,13)
+-                                                List
+-                                                    StringLit @ (21,19)
+-                                                        "\n"
+-                            LocalVarDef @ (24,13)
+-                                <none>
+-                                dotintint
+-                                Lambda @ (24,25)
+-                                    List
+-                                        LocalVarDef @ (24,39)
+-                                            TLambda @ (24,30)
+-                                                TInt @ (24,30)
+-                                                List
+-                                                    TInt @ (24,34)
+-                                            f
+-                                            <none>
+-                                    Lambda @ (24,45)
+-                                        List
+-                                            LocalVarDef @ (24,59)
+-                                                TLambda @ (24,50)
+-                                                    TInt @ (24,50)
+-                                                    List
+-                                                        TInt @ (24,54)
+-                                                g
+-                                                <none>
+-                                        Lambda @ (24,65)
+-                                            List
+-                                                LocalVarDef @ (24,74)
+-                                                    TInt @ (24,70)
+-                                                    x
+-                                                    <none>
+-                                            Call @ (24,81)
+-                                                VarSel @ (24,80)
+-                                                    <none>
+-                                                    f
+-                                                List
+-                                                    Call @ (24,83)
+-                                                        VarSel @ (24,82)
+-                                                            <none>
+-                                                            g
+-                                                        List
+-                                                            VarSel @ (24,84)
+-                                                                <none>
+-                                                                x
+-                            LocalVarDef @ (26,13)
+-                                <none>
+-                                plus1
+-                                Lambda @ (26,21)
+-                                    List
+-                                        LocalVarDef @ (26,30)
+-                                            TInt @ (26,26)
+-                                            x
+-                                            <none>
+-                                    Binary @ (26,37)
+-                                        ADD
+-                                        VarSel @ (26,36)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (26,38)
+-                                            1
+-                            LocalVarDef @ (27,13)
+-                                <none>
+-                                times3
+-                                Lambda @ (27,22)
+-                                    List
+-                                        LocalVarDef @ (27,31)
+-                                            TInt @ (27,27)
+-                                            x
+-                                            <none>
+-                                    Binary @ (27,38)
+-                                        MUL
+-                                        VarSel @ (27,37)
+-                                            <none>
+-                                            x
+-                                        IntLit @ (27,39)
+-                                            3
+-                            LocalVarDef @ (29,13)
+-                                <none>
+-                                arr
+-                                NewArray @ (29,19)
+-                                    TInt @ (29,23)
+-                                    IntLit @ (29,27)
+-                                        3
+-                            Assign @ (29,38)
+-                                IndexSel @ (29,34)
+-                                    VarSel @ (29,31)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (29,35)
+-                                        0
+-                                IntLit @ (29,40)
+-                                    10
+-                            Assign @ (29,51)
+-                                IndexSel @ (29,47)
+-                                    VarSel @ (29,44)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (29,48)
+-                                        1
+-                                IntLit @ (29,53)
+-                                    20
+-                            Assign @ (29,64)
+-                                IndexSel @ (29,60)
+-                                    VarSel @ (29,57)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (29,61)
+-                                        2
+-                                IntLit @ (29,66)
+-                                    30
+-                            LocalVarDef @ (30,13)
+-                                <none>
+-                                arr2
+-                                NewArray @ (30,20)
+-                                    TInt @ (30,24)
+-                                    IntLit @ (30,28)
+-                                        3
+-                            Assign @ (30,39)
+-                                IndexSel @ (30,35)
+-                                    VarSel @ (30,32)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (30,36)
+-                                        0
+-                                IntLit @ (30,41)
+-                                    100
+-                            Assign @ (30,53)
+-                                IndexSel @ (30,49)
+-                                    VarSel @ (30,46)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (30,50)
+-                                        1
+-                                IntLit @ (30,55)
+-                                    200
+-                            Assign @ (30,67)
+-                                IndexSel @ (30,63)
+-                                    VarSel @ (30,60)
+-                                        <none>
+-                                        arr
+-                                    IntLit @ (30,64)
+-                                        2
+-                                IntLit @ (30,69)
+-                                    300
+-                            ExprEval @ (32,18)
+-                                Call @ (32,18)
+-                                    VarSel @ (32,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        VarSel @ (32,19)
+-                                            <none>
+-                                            arr
+-                            LocalVarDef @ (33,13)
+-                                <none>
+-                                pred
+-                                Lambda @ (33,20)
+-                                    List
+-                                        LocalVarDef @ (33,29)
+-                                            TInt @ (33,25)
+-                                            x
+-                                            <none>
+-                                    Binary @ (33,45)
+-                                        AND
+-                                        Binary @ (33,38)
+-                                            NE
+-                                            VarSel @ (33,36)
+-                                                <none>
+-                                                x
+-                                            IntLit @ (33,41)
+-                                                20
+-                                        Binary @ (33,51)
+-                                            NE
+-                                            VarSel @ (33,49)
+-                                                <none>
+-                                                x
+-                                            IntLit @ (33,54)
+-                                                200
+-                            LocalVarDef @ (34,13)
+-                                <none>
+-                                pf
+-                                Call @ (34,27)
+-                                    VarSel @ (34,18)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        VarSel @ (34,28)
+-                                            <none>
+-                                            pred
+-                            ExprEval @ (35,11)
+-                                Call @ (35,11)
+-                                    VarSel @ (35,9)
+-                                        <none>
+-                                        pf
+-                                    List
+-                                        VarSel @ (35,12)
+-                                            <none>
+-                                            arr
+-                            ExprEval @ (36,18)
+-                                Call @ (36,18)
+-                                    VarSel @ (36,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (36,42)
+-                                            Call @ (36,22)
+-                                                VarSel @ (36,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Lambda @ (36,23)
+-                                                        List
+-                                                            LocalVarDef @ (36,32)
+-                                                                TInt @ (36,28)
+-                                                                x
+-                                                                <none>
+-                                                        Binary @ (36,39)
+-                                                            ADD
+-                                                            VarSel @ (36,38)
+-                                                                <none>
+-                                                                x
+-                                                            IntLit @ (36,40)
+-                                                                1
+-                                            List
+-                                                VarSel @ (36,43)
+-                                                    <none>
+-                                                    arr
+-                            ExprEval @ (37,18)
+-                                Call @ (37,18)
+-                                    VarSel @ (37,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (37,29)
+-                                            Call @ (37,22)
+-                                                VarSel @ (37,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    VarSel @ (37,23)
+-                                                        <none>
+-                                                        plus1
+-                                            List
+-                                                VarSel @ (37,30)
+-                                                    <none>
+-                                                    arr
+-                            ExprEval @ (38,18)
+-                                Call @ (38,18)
+-                                    VarSel @ (38,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (38,30)
+-                                            Call @ (38,22)
+-                                                VarSel @ (38,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    VarSel @ (38,23)
+-                                                        <none>
+-                                                        times3
+-                                            List
+-                                                VarSel @ (38,31)
+-                                                    <none>
+-                                                    arr
+-                            ExprEval @ (39,18)
+-                                Call @ (39,18)
+-                                    VarSel @ (39,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (40,23)
+-                                            Call @ (39,23)
+-                                                VarSel @ (39,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Call @ (39,40)
+-                                                        Call @ (39,33)
+-                                                            VarSel @ (39,24)
+-                                                                <none>
+-                                                                dotintint
+-                                                            List
+-                                                                VarSel @ (39,34)
+-                                                                    <none>
+-                                                                    plus1
+-                                                        List
+-                                                            VarSel @ (39,41)
+-                                                                <none>
+-                                                                times3
+-                                            List
+-                                                VarSel @ (40,24)
+-                                                    <none>
+-                                                    arr
+-                            ExprEval @ (41,18)
+-                                Call @ (41,18)
+-                                    VarSel @ (41,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (42,23)
+-                                            Call @ (41,23)
+-                                                VarSel @ (41,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Call @ (41,41)
+-                                                        Call @ (41,33)
+-                                                            VarSel @ (41,24)
+-                                                                <none>
+-                                                                dotintint
+-                                                            List
+-                                                                VarSel @ (41,34)
+-                                                                    <none>
+-                                                                    times3
+-                                                        List
+-                                                            VarSel @ (41,42)
+-                                                                <none>
+-                                                                plus1
+-                                            List
+-                                                VarSel @ (42,24)
+-                                                    <none>
+-                                                    arr
+-                            Print @ (44,9)
+-                                List
+-                                    StringLit @ (44,15)
+-                                        "================================\n"
+-                            ExprEval @ (45,18)
+-                                Call @ (45,18)
+-                                    VarSel @ (45,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        VarSel @ (45,19)
+-                                            <none>
+-                                            arr2
+-                            ExprEval @ (46,11)
+-                                Call @ (46,11)
+-                                    VarSel @ (46,9)
+-                                        <none>
+-                                        pf
+-                                    List
+-                                        VarSel @ (46,12)
+-                                            <none>
+-                                            arr2
+-                            ExprEval @ (47,18)
+-                                Call @ (47,18)
+-                                    VarSel @ (47,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (47,42)
+-                                            Call @ (47,22)
+-                                                VarSel @ (47,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Lambda @ (47,23)
+-                                                        List
+-                                                            LocalVarDef @ (47,32)
+-                                                                TInt @ (47,28)
+-                                                                x
+-                                                                <none>
+-                                                        Binary @ (47,39)
+-                                                            ADD
+-                                                            VarSel @ (47,38)
+-                                                                <none>
+-                                                                x
+-                                                            IntLit @ (47,40)
+-                                                                1
+-                                            List
+-                                                VarSel @ (47,43)
+-                                                    <none>
+-                                                    arr2
+-                            ExprEval @ (48,18)
+-                                Call @ (48,18)
+-                                    VarSel @ (48,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (48,29)
+-                                            Call @ (48,22)
+-                                                VarSel @ (48,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    VarSel @ (48,23)
+-                                                        <none>
+-                                                        plus1
+-                                            List
+-                                                VarSel @ (48,30)
+-                                                    <none>
+-                                                    arr2
+-                            ExprEval @ (49,18)
+-                                Call @ (49,18)
+-                                    VarSel @ (49,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (49,30)
+-                                            Call @ (49,22)
+-                                                VarSel @ (49,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    VarSel @ (49,23)
+-                                                        <none>
+-                                                        times3
+-                                            List
+-                                                VarSel @ (49,31)
+-                                                    <none>
+-                                                    arr2
+-                            ExprEval @ (50,18)
+-                                Call @ (50,18)
+-                                    VarSel @ (50,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (51,23)
+-                                            Call @ (50,23)
+-                                                VarSel @ (50,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Call @ (50,40)
+-                                                        Call @ (50,33)
+-                                                            VarSel @ (50,24)
+-                                                                <none>
+-                                                                dotintint
+-                                                            List
+-                                                                VarSel @ (50,34)
+-                                                                    <none>
+-                                                                    plus1
+-                                                        List
+-                                                            VarSel @ (50,41)
+-                                                                <none>
+-                                                                times3
+-                                            List
+-                                                VarSel @ (51,24)
+-                                                    <none>
+-                                                    arr2
+-                            ExprEval @ (52,18)
+-                                Call @ (52,18)
+-                                    VarSel @ (52,9)
+-                                        <none>
+-                                        print_arr
+-                                    List
+-                                        Call @ (53,23)
+-                                            Call @ (52,23)
+-                                                VarSel @ (52,19)
+-                                                    <none>
+-                                                    map
+-                                                List
+-                                                    Call @ (52,41)
+-                                                        Call @ (52,33)
+-                                                            VarSel @ (52,24)
+-                                                                <none>
+-                                                                dotintint
+-                                                            List
+-                                                                VarSel @ (52,34)
+-                                                                    <none>
+-                                                                    times3
+-                                                        List
+-                                                            VarSel @ (52,42)
+-                                                                <none>
+-                                                                plus1
+-                                            List
+-                                                VarSel @ (53,24)
+-                                                    <none>
+-                                                    arr2
++*** Error at (5,13): syntax error[0m
+lambda9.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambda9.result
+
++++ S1\output\lambda9.output
+
+@@ -1,540 +1 @@
+
+-TopLevel @ (13,1)
+-    List
+-        ClassDef @ (13,1)
+-            A
+-            <none>
+-            List
+-                <empty>
+-        ClassDef @ (14,1)
+-            B
+-            A
+-            List
+-                <empty>
+-        ClassDef @ (15,1)
+-            C
+-            A
+-            List
+-                <empty>
+-        ClassDef @ (16,1)
+-            D
+-            C
+-            List
+-                <empty>
+-        ClassDef @ (17,1)
+-            E
+-            D
+-            List
+-                <empty>
+-        ClassDef @ (18,1)
+-            F
+-            D
+-            List
+-                <empty>
+-        ClassDef @ (19,1)
+-            G
+-            C
+-            List
+-                <empty>
+-        ClassDef @ (20,1)
+-            H
+-            G
+-            List
+-                <empty>
+-        ClassDef @ (21,1)
+-            I
+-            G
+-            List
+-                <empty>
+-        ClassDef @ (23,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (24,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (24,12)
+-                    List
+-                        <empty>
+-                    Block @ (24,24)
+-                        List
+-                            LocalVarDef @ (25,13)
+-                                <none>
+-                                l__a
+-                                NewClass @ (25,20)
+-                                    A
+-                            LocalVarDef @ (26,13)
+-                                <none>
+-                                l__b
+-                                NewClass @ (26,20)
+-                                    B
+-                            LocalVarDef @ (27,13)
+-                                <none>
+-                                l__c
+-                                NewClass @ (27,20)
+-                                    C
+-                            LocalVarDef @ (28,13)
+-                                <none>
+-                                l__d
+-                                NewClass @ (28,20)
+-                                    D
+-                            LocalVarDef @ (29,13)
+-                                <none>
+-                                l__e
+-                                NewClass @ (29,20)
+-                                    E
+-                            LocalVarDef @ (30,13)
+-                                <none>
+-                                l__f
+-                                NewClass @ (30,20)
+-                                    F
+-                            LocalVarDef @ (31,13)
+-                                <none>
+-                                l__g
+-                                NewClass @ (31,20)
+-                                    G
+-                            LocalVarDef @ (32,13)
+-                                <none>
+-                                l__h
+-                                NewClass @ (32,20)
+-                                    H
+-                            LocalVarDef @ (33,13)
+-                                <none>
+-                                l__i
+-                                NewClass @ (33,20)
+-                                    I
+-                            LocalVarDef @ (35,27)
+-                                TLambda @ (35,9)
+-                                    TClass @ (35,9)
+-                                        C
+-                                    List
+-                                        TInt @ (35,17)
+-                                        TInt @ (35,22)
+-                                goodfactory
+-                                Lambda @ (35,41)
+-                                    List
+-                                        LocalVarDef @ (35,50)
+-                                            TInt @ (35,46)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (35,57)
+-                                            TInt @ (35,53)
+-                                            y
+-                                            <none>
+-                                    Block @ (35,60)
+-                                        List
+-                                            LocalVarDef @ (36,17)
+-                                                <none>
+-                                                t
+-                                                VarSel @ (36,21)
+-                                                    <none>
+-                                                    y
+-                                            For @ (37,13)
+-                                                LocalVarDef @ (37,22)
+-                                                    <none>
+-                                                    l_
+-                                                    VarSel @ (37,27)
+-                                                        <none>
+-                                                        x
+-                                                Binary @ (37,33)
+-                                                    NE
+-                                                    VarSel @ (37,30)
+-                                                        <none>
+-                                                        l_
+-                                                    IntLit @ (37,36)
+-                                                        0
+-                                                Assign @ (37,42)
+-                                                    VarSel @ (37,39)
+-                                                        <none>
+-                                                        l_
+-                                                    Binary @ (37,47)
+-                                                        SUB
+-                                                        VarSel @ (37,44)
+-                                                            <none>
+-                                                            l_
+-                                                        IntLit @ (37,49)
+-                                                            1
+-                                                Block @ (37,54)
+-                                                    List
+-                                                        Assign @ (37,54)
+-                                                            VarSel @ (37,52)
+-                                                                <none>
+-                                                                t
+-                                                            Binary @ (37,58)
+-                                                                ADD
+-                                                                VarSel @ (37,56)
+-                                                                    <none>
+-                                                                    t
+-                                                                IntLit @ (37,60)
+-                                                                    1
+-                                            If @ (38,13)
+-                                                Binary @ (38,19)
+-                                                    EQ
+-                                                    VarSel @ (38,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (38,22)
+-                                                        4
+-                                                Block @ (38,25)
+-                                                    List
+-                                                        Return @ (38,25)
+-                                                            VarSel @ (38,32)
+-                                                                <none>
+-                                                                l__d
+-                                                <none>
+-                                            If @ (39,13)
+-                                                Binary @ (39,19)
+-                                                    EQ
+-                                                    VarSel @ (39,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (39,22)
+-                                                        8
+-                                                Block @ (39,25)
+-                                                    List
+-                                                        Return @ (39,25)
+-                                                            VarSel @ (39,32)
+-                                                                <none>
+-                                                                l__h
+-                                                <none>
+-                                            If @ (40,13)
+-                                                Binary @ (40,19)
+-                                                    EQ
+-                                                    VarSel @ (40,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (40,22)
+-                                                        9
+-                                                Block @ (40,25)
+-                                                    List
+-                                                        Return @ (40,25)
+-                                                            VarSel @ (40,32)
+-                                                                <none>
+-                                                                l__i
+-                                                <none>
+-                            LocalVarDef @ (43,27)
+-                                TLambda @ (43,9)
+-                                    TClass @ (43,9)
+-                                        A
+-                                    List
+-                                        TInt @ (43,17)
+-                                        TInt @ (43,22)
+-                                okfactory
+-                                Lambda @ (43,39)
+-                                    List
+-                                        LocalVarDef @ (43,48)
+-                                            TInt @ (43,44)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (43,55)
+-                                            TInt @ (43,51)
+-                                            y
+-                                            <none>
+-                                    Block @ (43,58)
+-                                        List
+-                                            LocalVarDef @ (44,17)
+-                                                <none>
+-                                                t
+-                                                VarSel @ (44,21)
+-                                                    <none>
+-                                                    y
+-                                            For @ (45,13)
+-                                                LocalVarDef @ (45,22)
+-                                                    <none>
+-                                                    l_
+-                                                    VarSel @ (45,27)
+-                                                        <none>
+-                                                        x
+-                                                Binary @ (45,33)
+-                                                    NE
+-                                                    VarSel @ (45,30)
+-                                                        <none>
+-                                                        l_
+-                                                    IntLit @ (45,36)
+-                                                        0
+-                                                Assign @ (45,42)
+-                                                    VarSel @ (45,39)
+-                                                        <none>
+-                                                        l_
+-                                                    Binary @ (45,47)
+-                                                        SUB
+-                                                        VarSel @ (45,44)
+-                                                            <none>
+-                                                            l_
+-                                                        IntLit @ (45,49)
+-                                                            1
+-                                                Block @ (45,54)
+-                                                    List
+-                                                        Assign @ (45,54)
+-                                                            VarSel @ (45,52)
+-                                                                <none>
+-                                                                t
+-                                                            Binary @ (45,58)
+-                                                                ADD
+-                                                                VarSel @ (45,56)
+-                                                                    <none>
+-                                                                    t
+-                                                                IntLit @ (45,60)
+-                                                                    1
+-                                            If @ (46,13)
+-                                                Binary @ (46,19)
+-                                                    EQ
+-                                                    VarSel @ (46,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (46,22)
+-                                                        4
+-                                                Block @ (46,25)
+-                                                    List
+-                                                        Return @ (46,25)
+-                                                            VarSel @ (46,32)
+-                                                                <none>
+-                                                                l__d
+-                                                <none>
+-                                            If @ (47,13)
+-                                                Binary @ (47,19)
+-                                                    EQ
+-                                                    VarSel @ (47,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (47,22)
+-                                                        8
+-                                                Block @ (47,25)
+-                                                    List
+-                                                        Return @ (47,25)
+-                                                            VarSel @ (47,32)
+-                                                                <none>
+-                                                                l__h
+-                                                <none>
+-                                            If @ (48,13)
+-                                                Binary @ (48,19)
+-                                                    EQ
+-                                                    VarSel @ (48,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (48,22)
+-                                                        9
+-                                                Block @ (48,25)
+-                                                    List
+-                                                        Return @ (48,25)
+-                                                            VarSel @ (48,32)
+-                                                                <none>
+-                                                                l__i
+-                                                <none>
+-                            LocalVarDef @ (51,27)
+-                                TLambda @ (51,9)
+-                                    TClass @ (51,9)
+-                                        B
+-                                    List
+-                                        TInt @ (51,17)
+-                                        TInt @ (51,22)
+-                                badfactory
+-                                Lambda @ (51,40)
+-                                    List
+-                                        LocalVarDef @ (51,49)
+-                                            TInt @ (51,45)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (51,56)
+-                                            TInt @ (51,52)
+-                                            y
+-                                            <none>
+-                                    Block @ (51,59)
+-                                        List
+-                                            LocalVarDef @ (52,17)
+-                                                <none>
+-                                                t
+-                                                VarSel @ (52,21)
+-                                                    <none>
+-                                                    y
+-                                            For @ (53,13)
+-                                                LocalVarDef @ (53,22)
+-                                                    <none>
+-                                                    l_
+-                                                    VarSel @ (53,27)
+-                                                        <none>
+-                                                        x
+-                                                Binary @ (53,33)
+-                                                    NE
+-                                                    VarSel @ (53,30)
+-                                                        <none>
+-                                                        l_
+-                                                    IntLit @ (53,36)
+-                                                        0
+-                                                Assign @ (53,42)
+-                                                    VarSel @ (53,39)
+-                                                        <none>
+-                                                        l_
+-                                                    Binary @ (53,47)
+-                                                        SUB
+-                                                        VarSel @ (53,44)
+-                                                            <none>
+-                                                            l_
+-                                                        IntLit @ (53,49)
+-                                                            1
+-                                                Block @ (53,54)
+-                                                    List
+-                                                        Assign @ (53,54)
+-                                                            VarSel @ (53,52)
+-                                                                <none>
+-                                                                t
+-                                                            Binary @ (53,58)
+-                                                                ADD
+-                                                                VarSel @ (53,56)
+-                                                                    <none>
+-                                                                    t
+-                                                                IntLit @ (53,60)
+-                                                                    1
+-                                            If @ (54,13)
+-                                                Binary @ (54,19)
+-                                                    EQ
+-                                                    VarSel @ (54,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (54,22)
+-                                                        4
+-                                                Block @ (54,25)
+-                                                    List
+-                                                        Return @ (54,25)
+-                                                            VarSel @ (54,32)
+-                                                                <none>
+-                                                                l__d
+-                                                <none>
+-                                            If @ (55,13)
+-                                                Binary @ (55,19)
+-                                                    EQ
+-                                                    VarSel @ (55,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (55,22)
+-                                                        8
+-                                                Block @ (55,25)
+-                                                    List
+-                                                        Return @ (55,25)
+-                                                            VarSel @ (55,32)
+-                                                                <none>
+-                                                                l__h
+-                                                <none>
+-                                            If @ (56,13)
+-                                                Binary @ (56,19)
+-                                                    EQ
+-                                                    VarSel @ (56,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (56,22)
+-                                                        9
+-                                                Block @ (56,25)
+-                                                    List
+-                                                        Return @ (56,25)
+-                                                            VarSel @ (56,32)
+-                                                                <none>
+-                                                                l__i
+-                                                <none>
+-                            LocalVarDef @ (59,27)
+-                                TLambda @ (59,9)
+-                                    TClass @ (59,9)
+-                                        G
+-                                    List
+-                                        TInt @ (59,17)
+-                                        TInt @ (59,22)
+-                                badfactory2
+-                                Lambda @ (59,41)
+-                                    List
+-                                        LocalVarDef @ (59,50)
+-                                            TInt @ (59,46)
+-                                            x
+-                                            <none>
+-                                        LocalVarDef @ (59,57)
+-                                            TInt @ (59,53)
+-                                            y
+-                                            <none>
+-                                    Block @ (59,60)
+-                                        List
+-                                            LocalVarDef @ (60,17)
+-                                                <none>
+-                                                t
+-                                                VarSel @ (60,21)
+-                                                    <none>
+-                                                    y
+-                                            For @ (61,13)
+-                                                LocalVarDef @ (61,22)
+-                                                    <none>
+-                                                    l_
+-                                                    VarSel @ (61,27)
+-                                                        <none>
+-                                                        x
+-                                                Binary @ (61,33)
+-                                                    NE
+-                                                    VarSel @ (61,30)
+-                                                        <none>
+-                                                        l_
+-                                                    IntLit @ (61,36)
+-                                                        0
+-                                                Assign @ (61,42)
+-                                                    VarSel @ (61,39)
+-                                                        <none>
+-                                                        l_
+-                                                    Binary @ (61,47)
+-                                                        SUB
+-                                                        VarSel @ (61,44)
+-                                                            <none>
+-                                                            l_
+-                                                        IntLit @ (61,49)
+-                                                            1
+-                                                Block @ (61,54)
+-                                                    List
+-                                                        Assign @ (61,54)
+-                                                            VarSel @ (61,52)
+-                                                                <none>
+-                                                                t
+-                                                            Binary @ (61,58)
+-                                                                ADD
+-                                                                VarSel @ (61,56)
+-                                                                    <none>
+-                                                                    t
+-                                                                IntLit @ (61,60)
+-                                                                    1
+-                                            If @ (62,13)
+-                                                Binary @ (62,19)
+-                                                    EQ
+-                                                    VarSel @ (62,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (62,22)
+-                                                        4
+-                                                Block @ (62,25)
+-                                                    List
+-                                                        Return @ (62,25)
+-                                                            VarSel @ (62,32)
+-                                                                <none>
+-                                                                l__d
+-                                                <none>
+-                                            If @ (63,13)
+-                                                Binary @ (63,19)
+-                                                    EQ
+-                                                    VarSel @ (63,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (63,22)
+-                                                        8
+-                                                Block @ (63,25)
+-                                                    List
+-                                                        Return @ (63,25)
+-                                                            VarSel @ (63,32)
+-                                                                <none>
+-                                                                l__h
+-                                                <none>
+-                                            If @ (64,13)
+-                                                Binary @ (64,19)
+-                                                    EQ
+-                                                    VarSel @ (64,17)
+-                                                        <none>
+-                                                        t
+-                                                    IntLit @ (64,22)
+-                                                        9
+-                                                Block @ (64,25)
+-                                                    List
+-                                                        Return @ (64,25)
+-                                                            VarSel @ (64,32)
+-                                                                <none>
+-                                                                l__i
+-                                                <none>
++*** Error at (25,13): syntax error[0m
+lambdabad1.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\lambdabad1.result
+
++++ S1\output\lambdabad1.output
+
+@@ -1,48 +1 @@
+
+-TopLevel @ (3,1)
+-    List
+-        ClassDef @ (3,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (4,12)
+-                    List
+-                        <empty>
+-                    Block @ (4,24)
+-                        List
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                a
+-                                Call @ (5,18)
+-                                    IntLit @ (5,17)
+-                                        4
+-                                    List
+-                                        IntLit @ (5,19)
+-                                            3
+-                            LocalVarDef @ (6,13)
+-                                <none>
+-                                b
+-                                Binary @ (6,19)
+-                                    ADD
+-                                    IntLit @ (6,17)
+-                                        2
+-                                    Lambda @ (6,21)
+-                                        List
+-                                            <empty>
+-                                        IntLit @ (6,29)
+-                                            0
+-                            LocalVarDef @ (7,13)
+-                                <none>
+-                                c
+-                                Binary @ (7,19)
+-                                    ADD
+-                                    IntLit @ (7,17)
+-                                        2
+-                                    Call @ (7,22)
+-                                        IntLit @ (7,21)
+-                                            3
+-                                        List
+-                                            IntLit @ (7,23)
+-                                                6
++*** Error at (5,13): syntax error[0m
+nqueues.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\nqueues.result
+
++++ S1\output\nqueues.output
+
+@@ -14,16 +14,14 @@
+
+                         List
+                             ExprEval @ (6,35)
+                                 Call @ (6,35)
+-                                    VarSel @ (6,30)
+-                                        Call @ (6,26)
+-                                            VarSel @ (6,22)
+-                                                NewClass @ (6,9)
+-                                                    NQueue
+-                                                init
+-                                            List
+-                                                IntLit @ (6,27)
+-                                                    8
+-                                        solve
++                                    Call @ (6,26)
++                                        NewClass @ (6,9)
++                                            NQueue
++                                        init
++                                        List
++                                            IntLit @ (6,27)
++                                                8
++                                    solve
+                                     List
+                                         <empty>
+         ClassDef @ (10,1)
+@@ -77,9 +75,8 @@
+
+                                     <none>
+                                     col
+                                 Call @ (20,25)
+-                                    VarSel @ (20,15)
+-                                        <none>
+-                                        clearArray
++                                    <none>
++                                    clearArray
+                                     List
+                                         NewArray @ (20,26)
+                                             TInt @ (20,30)
+@@ -91,9 +88,8 @@
+
+                                     <none>
+                                     row
+                                 Call @ (21,25)
+-                                    VarSel @ (21,15)
+-                                        <none>
+-                                        clearArray
++                                    <none>
++                                    clearArray
+                                     List
+                                         NewArray @ (21,26)
+                                             TInt @ (21,30)
+@@ -105,9 +101,8 @@
+
+                                     <none>
+                                     di1
+                                 Call @ (22,25)
+-                                    VarSel @ (22,15)
+-                                        <none>
+-                                        clearArray
++                                    <none>
++                                    clearArray
+                                     List
+                                         NewArray @ (22,26)
+                                             TInt @ (22,30)
+@@ -119,9 +114,8 @@
+
+                                     <none>
+                                     di2
+                                 Call @ (23,25)
+-                                    VarSel @ (23,15)
+-                                        <none>
+-                                        clearArray
++                                    <none>
++                                    clearArray
+                                     List
+                                         NewArray @ (23,26)
+                                             TInt @ (23,30)
+@@ -139,9 +133,8 @@
+
+                         List
+                             ExprEval @ (30,12)
+                                 Call @ (30,12)
+-                                    VarSel @ (30,9)
+-                                        <none>
+-                                        try
++                                    <none>
++                                    try
+                                     List
+                                         IntLit @ (30,13)
+                                             0
+@@ -175,11 +168,10 @@
+
+                                 Binary @ (35,28)
+                                     SUB
+                                     Call @ (35,25)
+-                                        VarSel @ (35,19)
+-                                            VarSel @ (35,17)
+-                                                <none>
+-                                                a
+-                                            length
++                                        VarSel @ (35,17)
++                                            <none>
++                                            a
++                                        length
+                                         List
+                                             <empty>
+                                     IntLit @ (35,30)
+@@ -329,11 +321,10 @@
+
+                                 TInt @ (63,9)
+                                 N
+                                 Call @ (63,27)
+-                                    VarSel @ (63,21)
+-                                        VarSel @ (63,17)
+-                                            <none>
+-                                            col
+-                                        length
++                                    VarSel @ (63,17)
++                                        <none>
++                                        col
++                                    length
+                                     List
+                                         <empty>
+                             LocalVarDef @ (64,13)
+@@ -354,9 +345,8 @@
+
+                                     List
+                                         ExprEval @ (67,23)
+                                             Call @ (67,23)
+-                                                VarSel @ (67,13)
+-                                                    <none>
+-                                                    printBoard
++                                                <none>
++                                                printBoard
+                                                 List
+                                                     VarSel @ (67,24)
+                                                         <none>
+@@ -498,9 +488,8 @@
+
+                                                                         r
+                                                                 ExprEval @ (75,24)
+                                                                     Call @ (75,24)
+-                                                                        VarSel @ (75,21)
+-                                                                            <none>
+-                                                                            try
++                                                                        <none>
++                                                                        try
+                                                                         List
+                                                                             Binary @ (75,26)
+                                                                                 ADD[0m
+test1.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\test1.result
+
++++ S1\output\test1.output
+
+@@ -85,14 +85,12 @@
+
+                         List
+                             Return @ (19,9)
+                                 Call @ (19,34)
+-                                    VarSel @ (19,28)
+-                                        Call @ (19,24)
+-                                            VarSel @ (19,21)
+-                                                This @ (19,16)
+-                                                foo
+-                                            List
+-                                                IntLit @ (19,25)
+-                                                    5
+-                                        length
++                                    Call @ (19,24)
++                                        This @ (19,16)
++                                        foo
++                                        List
++                                            IntLit @ (19,25)
++                                                5
++                                    length
+                                     List
+                                         <empty>[0m
+test2.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\test2.result
+
++++ S1\output\test2.output
+
+@@ -30,11 +30,10 @@
+
+                                     4
+                             ExprEval @ (8,23)
+                                 Call @ (8,23)
+-                                    VarSel @ (8,11)
+-                                        VarSel @ (8,9)
+-                                            <none>
+-                                            h
+-                                        printNumbers
++                                    VarSel @ (8,9)
++                                        <none>
++                                        h
++                                    printNumbers
+                                     List
+                                         VarSel @ (8,24)
+                                             <none>
+@@ -57,11 +56,10 @@
+
+                                     Goo
+                             ExprEval @ (11,23)
+                                 Call @ (11,23)
+-                                    VarSel @ (11,11)
+-                                        VarSel @ (11,9)
+-                                            <none>
+-                                            g
+-                                        printNumbers
++                                    VarSel @ (11,9)
++                                        <none>
++                                        g
++                                    printNumbers
+                                     List
+                                         VarSel @ (11,24)
+                                             <none>[0m
+test3.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\test3.result
+
++++ S1\output\test3.output
+
+@@ -91,9 +91,8 @@
+
+                                         y
+                             Return @ (12,9)
+                                 Call @ (12,19)
+-                                    VarSel @ (12,16)
+-                                        <none>
+-                                        foo
++                                    <none>
++                                    foo
+                                     List
+                                         VarSel @ (12,20)
+                                             <none>[0m
+test4.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\test4.result
+
++++ S1\output\test4.output
+
+@@ -50,9 +50,8 @@
+
+                                                     3
+                                         Return @ (7,13)
+                                             Call @ (7,26)
+-                                                VarSel @ (7,20)
+-                                                    <none>
+-                                                    method
++                                                <none>
++                                                method
+                                                 List
+                                                     VarSel @ (7,27)
+                                                         <none>[0m
+test5.decaf  ...  [32mCORRECT[0m
+test6.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\test6.result
+
++++ S1\output\test6.output
+
+@@ -44,45 +44,40 @@
+
+                                     Sub4
+                             ExprEval @ (9,18)
+                                 Call @ (9,18)
+-                                    VarSel @ (9,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (9,19)
+                                             <none>
+                                             b
+                             ExprEval @ (10,18)
+                                 Call @ (10,18)
+-                                    VarSel @ (10,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (10,19)
+                                             <none>
+                                             s1
+                             ExprEval @ (11,18)
+                                 Call @ (11,18)
+-                                    VarSel @ (11,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (11,19)
+                                             <none>
+                                             s2
+                             ExprEval @ (12,18)
+                                 Call @ (12,18)
+-                                    VarSel @ (12,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (12,19)
+                                             <none>
+                                             s3
+                             ExprEval @ (13,18)
+                                 Call @ (13,18)
+-                                    VarSel @ (13,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (13,19)
+                                             <none>
+@@ -96,9 +91,8 @@
+
+                                     s4
+                             ExprEval @ (15,18)
+                                 Call @ (15,18)
+-                                    VarSel @ (15,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (15,19)
+                                             <none>
+@@ -114,9 +108,8 @@
+
+                                     Sub1
+                             ExprEval @ (17,18)
+                                 Call @ (17,18)
+-                                    VarSel @ (17,9)
+-                                        <none>
+-                                        printType
++                                    <none>
++                                    printType
+                                     List
+                                         VarSel @ (17,19)
+                                             <none>[0m
+var1.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\var1.result
+
++++ S1\output\var1.output
+
+@@ -1,94 +1 @@
+
+-TopLevel @ (1,1)
+-    List
+-        ClassDef @ (1,1)
+-            Main
+-            <none>
+-            List
+-                VarDef @ (2,10)
+-                    TBool @ (2,5)
+-                    e
+-                    <none>
+-                MethodDef @ (4,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (4,12)
+-                    List
+-                        <empty>
+-                    Block @ (4,24)
+-                        List
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                a
+-                                IntLit @ (5,17)
+-                                    5
+-                            LocalVarDef @ (6,13)
+-                                <none>
+-                                b
+-                                IntLit @ (6,17)
+-                                    7
+-                            LocalVarDef @ (7,13)
+-                                <none>
+-                                c
+-                                Binary @ (7,23)
+-                                    SUB
+-                                    Binary @ (7,19)
+-                                        ADD
+-                                        VarSel @ (7,17)
+-                                            <none>
+-                                            a
+-                                        VarSel @ (7,21)
+-                                            <none>
+-                                            b
+-                                    IntLit @ (7,25)
+-                                        1
+-                            LocalVarDef @ (9,13)
+-                                <none>
+-                                d
+-                                VarSel @ (9,30)
+-                                    NewClass @ (9,18)
+-                                        Main
+-                                    e
+-                            LocalVarDef @ (11,13)
+-                                <none>
+-                                e
+-                                NewClass @ (11,17)
+-                                    Main
+-                            LocalVarDef @ (13,13)
+-                                <none>
+-                                f
+-                                NewArray @ (13,17)
+-                                    TInt @ (13,21)
+-                                    IntLit @ (13,25)
+-                                        2
+-                            LocalVarDef @ (15,13)
+-                                <none>
+-                                g
+-                                BoolLit @ (15,17)
+-                                    true
+-                            LocalVarDef @ (16,13)
+-                                <none>
+-                                h
+-                                BoolLit @ (16,17)
+-                                    false
+-                            LocalVarDef @ (18,13)
+-                                <none>
+-                                i
+-                                Binary @ (18,20)
+-                                    GT
+-                                    IntLit @ (18,17)
+-                                        56
+-                                    IntLit @ (18,22)
+-                                        123
+-                            LocalVarDef @ (20,13)
+-                                <none>
+-                                j
+-                                IndexSel @ (20,18)
+-                                    VarSel @ (20,17)
+-                                        <none>
+-                                        f
+-                                    IntLit @ (20,19)
+-                                        0
+-                            LocalVarDef @ (21,13)
+-                                <none>
+-                                k
+-                                ReadInt @ (21,17)
++*** Error at (5,13): syntax error[0m
+var2.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\var2.result
+
++++ S1\output\var2.output
+
+@@ -1 +1 @@
+
+-*** Error at (11,14): syntax error
++*** Error at (5,13): syntax error[0m
+var6.decaf  ...  [31mWRONG[0m
+[35m--- S1\result\var6.result
+
++++ S1\output\var6.output
+
+@@ -1,116 +1 @@
+
+-TopLevel @ (1,1)
+-    List
+-        ClassDef @ (1,1)
+-            Main
+-            <none>
+-            List
+-                MethodDef @ (2,16)
+-                    STATIC
+-                    f
+-                    TInt @ (2,12)
+-                    List
+-                        LocalVarDef @ (2,22)
+-                            TInt @ (2,18)
+-                            a
+-                            <none>
+-                        LocalVarDef @ (2,29)
+-                            TInt @ (2,25)
+-                            b
+-                            <none>
+-                    Block @ (2,32)
+-                        List
+-                            LocalVarDef @ (3,13)
+-                                <none>
+-                                c
+-                                StringLit @ (3,17)
+-                                    "zjm1926"
+-                            LocalVarDef @ (4,13)
+-                                <none>
+-                                d
+-                                StringLit @ (4,17)
+-                                    "glgjssy qyhfbqz"
+-                            LocalVarDef @ (5,13)
+-                                <none>
+-                                e
+-                                StringLit @ (5,17)
+-                                    "xgjz"
+-                            LocalVarDef @ (6,13)
+-                                <none>
+-                                s
+-                                IntLit @ (6,17)
+-                                    0
+-                            For @ (7,9)
+-                                LocalVarDef @ (7,18)
+-                                    <none>
+-                                    i
+-                                    VarSel @ (7,22)
+-                                        <none>
+-                                        a
+-                                Binary @ (7,27)
+-                                    LT
+-                                    VarSel @ (7,25)
+-                                        <none>
+-                                        i
+-                                    VarSel @ (7,29)
+-                                        <none>
+-                                        b
+-                                Assign @ (7,34)
+-                                    VarSel @ (7,32)
+-                                        <none>
+-                                        i
+-                                    Binary @ (7,38)
+-                                        ADD
+-                                        VarSel @ (7,36)
+-                                            <none>
+-                                            i
+-                                        IntLit @ (7,40)
+-                                            1
+-                                Block @ (8,15)
+-                                    List
+-                                        Assign @ (8,15)
+-                                            VarSel @ (8,13)
+-                                                <none>
+-                                                s
+-                                            Binary @ (8,19)
+-                                                ADD
+-                                                VarSel @ (8,17)
+-                                                    <none>
+-                                                    s
+-                                                VarSel @ (8,21)
+-                                                    <none>
+-                                                    i
+-                            Return @ (9,9)
+-                                VarSel @ (9,16)
+-                                    <none>
+-                                    s
+-                MethodDef @ (11,17)
+-                    STATIC
+-                    main
+-                    TVoid @ (11,12)
+-                    List
+-                        <empty>
+-                    Block @ (11,24)
+-                        List
+-                            LocalVarDef @ (12,13)
+-                                <none>
+-                                a
+-                                IntLit @ (12,17)
+-                                    1
+-                            LocalVarDef @ (13,13)
+-                                <none>
+-                                b
+-                                IntLit @ (13,17)
+-                                    10
+-                            Print @ (14,9)
+-                                List
+-                                    Call @ (14,16)
+-                                        VarSel @ (14,15)
+-                                            <none>
+-                                            f
+-                                        List
+-                                            VarSel @ (14,17)
+-                                                <none>
+-                                                a
+-                                            VarSel @ (14,20)
+-                                                <none>
+-                                                b
++*** Error at (3,13): syntax error[0m
+[1;4;31mSummary: 7 succeeded, 23 failed[0m
