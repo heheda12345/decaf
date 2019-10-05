@@ -362,30 +362,6 @@ public abstract class Tree {
     }
 
     /**
-     * auto in c++: {@code var}.
-     */
-    public static class TVar extends TypeLit {
-        public TVar(Pos pos) {
-            super(Kind.T_VAR, "TVar", pos);
-        }
-
-        @Override
-        public Object treeElementAt(int index) {
-            throw new IndexOutOfBoundsException(index);
-        }
-
-        @Override
-        public int treeArity() {
-            return 0;
-        }
-
-        @Override
-        public <C> void accept(Visitor<C> v, C ctx) {
-            v.visitTVar(this, ctx);
-        }
-    }
-
-    /**
      * Class type.
      * <pre>
      *     'class' id
@@ -453,6 +429,30 @@ public abstract class Tree {
         }
     }
 
+    /**
+     * Var type: {@code var}.
+     */
+    public static class TVar extends TypeLit {
+        public TVar(Pos pos) {
+            super(Kind.T_VAR, "TVar", pos);
+        }
+
+        @Override
+        public Object treeElementAt(int index) {
+            throw new IndexOutOfBoundsException(index);
+        }
+
+        @Override
+        public int treeArity() {
+            return 0;
+        }
+
+        @Override
+        public <C> void accept(Visitor<C> v, C ctx) {
+            v.visitTVar(this, ctx);
+        }
+    }
+
 
     /**
      * Statement.
@@ -481,7 +481,7 @@ public abstract class Tree {
      */
     public static class LocalVarDef extends Stmt {
         // Tree elements
-        public TypeLit typeLit;
+        public Optional<TypeLit> typeLit;
         public Id id;
         public Pos assignPos;
         public Optional<Expr> initVal;
@@ -494,7 +494,7 @@ public abstract class Tree {
             // pos = id.pos, assignPos = position of the '='
             // TODO: looks not very consistent, maybe we shall always report error simply at `pos`, not `assignPos`?
             super(Kind.LOCAL_VAR_DEF, "LocalVarDef", pos);
-            this.typeLit = typeLit;
+            this.typeLit = Optional.ofNullable((typeLit instanceof TVar) ? null : typeLit);
             this.id = id;
             this.assignPos = assignPos;
             this.initVal = initVal;
