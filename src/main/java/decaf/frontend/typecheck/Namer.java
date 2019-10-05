@@ -227,7 +227,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         ctx.declare(symbol);
                         method.symbol = symbol;
                         ctx.open(formal);
-                        // zc: for compile
+                        // SOS
                         // method.body.accept(this, ctx);
                         ctx.close();
                     } else {
@@ -250,7 +250,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             ctx.declare(symbol);
             method.symbol = symbol;
             ctx.open(formal);
-            // zc: for compile
+            // SOS
             // method.body.accept(this, ctx);
             ctx.close();
         }
@@ -264,7 +264,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var argTypes = new ArrayList<Type>();
             for (var param : method.params) {
                 param.accept(this, ctx);
-                // zc: for compile
+                // SOS
                 // argTypes.add(param.typeLit.type);
             }
             method.type = new FunType(method.returnType.type, argTypes);
@@ -289,7 +289,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
             return;
         }
-        // zc: for compile
+        // SOS
         // def.typeLit.accept(this, ctx);
         // if (def.typeLit.type.eq(BuiltInType.VOID)) {
         //     issue(new BadVarTypeError(def.pos, def.name));

@@ -1,0 +1,1 @@
+java -jar --enable-preview build/libs/decaf.jar TestCases/S1/var6.decaf

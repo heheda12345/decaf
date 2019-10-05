@@ -547,7 +547,8 @@ Expr8           :   Expr9 ExprT8
                             if (sv.expr != null) {
                                 $$ = svExpr(new IndexSel($$.expr, sv.expr, sv.pos));
                             } else if (sv.exprList != null) {
-                                $$ = svExpr(new Call($$.expr, sv.id, sv.exprList, sv.pos));
+                                // SOS
+                                // $$ = svExpr(new Call($$.expr, sv.id, sv.exprList, sv.pos));
                             } else {
                                 $$ = svExpr(new VarSel($$.expr, sv.id, sv.pos));
                             }
@@ -631,7 +632,8 @@ Expr9           :   Literal
                 |   Id ExprListOpt
                     {
                         if ($2.exprList != null) {
-                            $$ = svExpr(new Call($1.id, $2.exprList, $2.pos));
+                            // SOS
+                            // $$ = svExpr(new Call($1.id, $2.exprList, $2.pos));
                         } else {
                             $$ = svExpr(new VarSel($1.id, $1.pos));
                         }

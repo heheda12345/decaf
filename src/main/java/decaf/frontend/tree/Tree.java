@@ -1584,29 +1584,33 @@ public abstract class Tree {
     public static class Call extends Expr {
         // Tree elements
         public Optional<Expr> receiver;
-        public Id method;
         public List<Expr> args;
-        //
-        public String methodName;
         // For type check
         public MethodSymbol symbol;
         public boolean isArrayLength = false;
 
-        public Call(Optional<Expr> receiver, Id method, List<Expr> args, Pos pos) {
+        public Call(Expr receiver, List<Expr> args, Pos pos) {
             super(Kind.CALL, "Call", pos);
-            this.receiver = receiver;
-            this.method = method;
+            this.receiver = Optional.ofNullable(receiver);
             this.args = args;
-            this.methodName = method.name;
         }
 
-        public Call(Id method, List<Expr> args, Pos pos) {
-            this(Optional.empty(), method, args, pos);
-        }
+        // public Call(Optional<Expr> receiver, Id method, List<Expr> args, Pos pos) {
+        //     super(Kind.CALL, "Call", pos);
+        //     System.out.println(pos);
+        //     this.receiver = receiver;
+        //     this.method = method;
+        //     this.args = args;
+        //     this.methodName = method.name;
+        // }
 
-        public Call(Expr receiver, Id method, List<Expr> args, Pos pos) {
-            this(Optional.of(receiver), method, args, pos);
-        }
+        // public Call(Id method, List<Expr> args, Pos pos) {
+        //     this(Optional.empty(), method, args, pos);
+        // }
+
+        // public Call(Expr receiver, Id method, List<Expr> args, Pos pos) {
+        //     this(Optional.of(receiver), method, args, pos);
+        // }
 
         /**
          * Set its receiver as {@code this}.
@@ -1621,15 +1625,14 @@ public abstract class Tree {
         public Object treeElementAt(int index) {
             return switch (index) {
                 case 0 -> receiver;
-                case 1 -> method;
-                case 2 -> args;
+                case 1 -> args;
                 default -> throw new IndexOutOfBoundsException(index);
             };
         }
 
         @Override
         public int treeArity() {
-            return 3;
+            return 2;
         }
 
         @Override
