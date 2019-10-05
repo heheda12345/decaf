@@ -1,3 +1,5 @@
+.vscode
+.classpath
 .gradle
 .idea/
 build/

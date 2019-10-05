@@ -227,7 +227,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         ctx.declare(symbol);
                         method.symbol = symbol;
                         ctx.open(formal);
-                        method.body.accept(this, ctx);
+                        // zc: for compile
+                        // method.body.accept(this, ctx);
                         ctx.close();
                     } else {
                         issue(new BadOverrideError(method.pos, method.name, suspect.owner.name));
@@ -249,7 +250,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             ctx.declare(symbol);
             method.symbol = symbol;
             ctx.open(formal);
-            method.body.accept(this, ctx);
+            // zc: for compile
+            // method.body.accept(this, ctx);
             ctx.close();
         }
     }

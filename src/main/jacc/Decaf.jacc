@@ -22,6 +22,7 @@ import java.util.Optional;
 %token BOOL_LIT     INT_LIT     STRING_LIT
 %token IDENTIFIER   AND         OR          STATIC      INSTANCE_OF
 %token LESS_EQUAL   GREATER_EQUAL           EQUAL       NOT_EQUAL
+%token ABSTRACT     VAR         FUN
 %token '+'  '-'  '*'  '/'  '%'  '='  '>'  '<'  '.'
 %token ','  ';'  '!'  '('  ')'  '['  ']'  '{'  '}'
 
@@ -69,7 +70,11 @@ ClassList       :   ClassList ClassDef
 
 ClassDef        :   CLASS Id ExtendsClause '{' FieldList '}'
                     {
-                        $$ = svClass(new ClassDef($2.id, Optional.ofNullable($3.id), $5.fieldList, $1.pos));
+                        $$ = svClass(new ClassDef($2.id, Optional.ofNullable($3.id), $5.fieldList, $1.pos, false));
+                    }
+                |   ABSTRACT CLASS Id ExtendsClause '{' FieldList '}'
+                    {
+                        $$ = svClass(new ClassDef($3.id, Optional.ofNullable($4.id), $6.fieldList, $2.pos, true));
                     }
                 ;
 
@@ -99,6 +104,11 @@ FieldList       :   FieldList Var ';'
                     }
                 ;
 
+VarVAR          :   TypeVAR Id 
+                    {
+                        $$ = svVar($1.type, $2.id, $2.pos);
+                    }
+                ;
 Var             :   Type Id
                     {
                         $$ = svVar($1.type, $2.id, $2.pos);
@@ -107,11 +117,15 @@ Var             :   Type Id
 
 MethodDef       :   STATIC Type Id '(' VarList ')' Block
                     {
-                        $$ = svField(new MethodDef(true, $3.id, $2.type, $5.varList, $7.block, $3.pos));
+                        $$ = svField(new MethodDef(true, $3.id, $2.type, $5.varList, Optional.ofNullable($7.block), $3.pos, false));
                     }
                 |   Type Id '(' VarList ')' Block
                     {
-                        $$ = svField(new MethodDef(false, $2.id, $1.type, $4.varList, $6.block, $2.pos));
+                        $$ = svField(new MethodDef(false, $2.id, $1.type, $4.varList, Optional.ofNullable($6.block), $2.pos, false));
+                    }
+                |   ABSTRACT Type Id '(' VarList ')' ';'
+                    {
+                        $$ = svField(new MethodDef(false, $3.id, $2.type, $5.varList, Optional.ofNullable(null), $3.pos, true));
                     }
                 ;
 
@@ -138,6 +152,11 @@ VarList1        :   VarList1 ',' Var
 
 // Types
 
+TypeVAR         :   VAR
+                    {
+                        $$ = svType(new TVar($1.pos));
+                    }
+                    ;
 Type            :   INT
                     {
                         $$ = svType(new TInt($1.pos));
@@ -239,8 +258,18 @@ SimpleStmt      :   Var Initializer
                     {
                         $$ = svStmt(null);
                     }
+                |   VarVAR InitializerNotNULL
+                    {
+                        $$ = svStmt(new LocalVarDef($1.type, $1.id, $2.pos, Optional.ofNullable($2.expr), $1.pos));
+                    } 
                 ;
 
+InitializerNotNULL : '=' Expr
+                    {
+                        $$ = svExpr($2.expr);
+                        $$.pos = $1.pos;
+                    }
+                ;
 Initializer     :   '=' Expr
                     {
                         $$ = svExpr($2.expr);

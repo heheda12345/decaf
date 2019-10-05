@@ -62,10 +62,11 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitMethodDef(Tree.MethodDef method, ScopeStack ctx) {
         ctx.open(method.symbol.scope);
-        method.body.accept(this, ctx);
-        if (!method.symbol.type.returnType.isVoidType() && !method.body.returns) {
-            issue(new MissingReturnError(method.body.pos));
-        }
+        // zc: for compile
+        // method.body.accept(this, ctx);
+        // if (!method.symbol.type.returnType.isVoidType() && !method.body.returns) {
+        //     issue(new MissingReturnError(method.body.pos));
+        // }
         ctx.close();
     }
 

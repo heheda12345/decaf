@@ -22,7 +22,7 @@ import java.util.Optional;
 public abstract class Tree {
     public enum Kind {
         TOP_LEVEL, CLASS_DEF, VAR_DEF, METHOD_DEF,
-        T_INT, T_BOOL, T_STRING, T_VOID, T_CLASS, T_ARRAY,
+        T_INT, T_BOOL, T_STRING, T_VOID, T_VAR, T_CLASS, T_ARRAY,
         LOCAL_VAR_DEF, BLOCK, ASSIGN, EXPR_EVAL, SKIP, IF, WHILE, FOR, BREAK, RETURN, PRINT,
         INT_LIT, BOOL_LIT, STRING_LIT, NULL_LIT, VAR_SEL, INDEX_SEL, CALL,
         THIS, UNARY_EXPR, BINARY_EXPR, READ_INT, READ_LINE, NEW_CLASS, NEW_ARRAY, CLASS_TEST, CLASS_CAST
@@ -79,13 +79,19 @@ public abstract class Tree {
         public ClassDef superClass;
         public ClassSymbol symbol;
         public boolean resolved = false;
+        public Modifiers modifiers;
 
-        public ClassDef(Id id, Optional<Id> parent, List<Field> fields, Pos pos) {
+        public ClassDef(Id id, Optional<Id> parent, List<Field> fields, Pos pos, boolean isAbstract) {
             super(Kind.CLASS_DEF, "ClassDef", pos);
             this.id = id;
             this.parent = parent;
             this.fields = fields;
             this.name = id.name;
+            this.modifiers = isAbstract ? new Modifiers(Modifiers.ABSTRACT, pos) : new Modifiers();
+        }
+
+        public boolean isAbstract() {
+            return modifiers.isAbstract();
         }
 
         public boolean hasParent() {
@@ -105,16 +111,17 @@ public abstract class Tree {
         @Override
         public Object treeElementAt(int index) {
             return switch (index) {
-                case 0 -> id;
-                case 1 -> parent;
-                case 2 -> fields;
+                case 0 -> modifiers;
+                case 1 -> id;
+                case 2 -> parent;
+                case 3 -> fields;
                 default -> throw new IndexOutOfBoundsException(index);
             };
         }
 
         @Override
         public int treeArity() {
-            return 3;
+            return 4;
         }
 
         @Override
@@ -191,16 +198,18 @@ public abstract class Tree {
         public Id id;
         public TypeLit returnType;
         public List<LocalVarDef> params;
-        public Block body;
+        public Optional<Block> body;
         // For convenience
         public String name;
         // For type check
         public FunType type;
         public MethodSymbol symbol;
 
-        public MethodDef(boolean isStatic, Id id, TypeLit returnType, List<LocalVarDef> params, Block body, Pos pos) {
+        public MethodDef(boolean isStatic, Id id, TypeLit returnType, List<LocalVarDef> params, Optional<Block> body, Pos pos, boolean isAbstract) {
             super(Kind.METHOD_DEF, "MethodDef", pos);
-            this.modifiers = isStatic ? new Modifiers(Modifiers.STATIC, pos) : new Modifiers();
+            int ctrCode = (isAbstract ? 2 : 0) + (isStatic ? 1 : 0);
+            Pos ctrPos = ctrCode > 0 ? pos : Pos.NoPos;
+            this.modifiers = new Modifiers(ctrCode, ctrPos);
             this.id = id;
             this.returnType = returnType;
             this.params = params;
@@ -210,6 +219,10 @@ public abstract class Tree {
 
         public boolean isStatic() {
             return modifiers.isStatic();
+        }
+
+        public boolean isAbstract() {
+            return modifiers.isAbstract();
         }
 
         @Override
@@ -345,6 +358,30 @@ public abstract class Tree {
         @Override
         public <C> void accept(Visitor<C> v, C ctx) {
             v.visitTVoid(this, ctx);
+        }
+    }
+
+    /**
+     * auto in c++: {@code var}.
+     */
+    public static class TVar extends TypeLit {
+        public TVar(Pos pos) {
+            super(Kind.T_VAR, "TVar", pos);
+        }
+
+        @Override
+        public Object treeElementAt(int index) {
+            throw new IndexOutOfBoundsException(index);
+        }
+
+        @Override
+        public int treeArity() {
+            return 0;
+        }
+
+        @Override
+        public <C> void accept(Visitor<C> v, C ctx) {
+            v.visitTVar(this, ctx);
         }
     }
 
@@ -1566,12 +1603,14 @@ public abstract class Tree {
 
         // Available modifiers:
         public static final int STATIC = 1;
+        public static final int ABSTRACT = 2;
 
         public Modifiers(int code, Pos pos) {
             this.code = code;
             this.pos = pos;
             flags = new ArrayList<>();
             if (isStatic()) flags.add("STATIC");
+            if (isAbstract()) flags.add("ABSTRACT");
         }
 
         public Modifiers() {
@@ -1579,7 +1618,11 @@ public abstract class Tree {
         }
 
         public boolean isStatic() {
-            return (code & 1) == 1;
+            return (code & 1) != 0;
+        }
+
+        public boolean isAbstract() {
+            return (code & 2) != 0;
         }
 
         @Override

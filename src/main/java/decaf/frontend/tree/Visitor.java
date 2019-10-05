@@ -42,6 +42,10 @@ public interface Visitor<C> {
         visitOthers(that, ctx);
     }
 
+    default void visitTVar(Tree.TVar that, C ctx) {
+        visitOthers(that, ctx);
+    }
+
     default void visitTClass(Tree.TClass that, C ctx) {
         visitOthers(that, ctx);
     }
