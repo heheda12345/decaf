@@ -78,6 +78,7 @@ public class JaccParser extends Phase<InputStream, Tree.TopLevel> {
                 case Tokens.ABSTRACT -> decaf.frontend.parsing.JaccTokens.ABSTRACT;
                 case Tokens.VAR -> decaf.frontend.parsing.JaccTokens.VAR;
                 case Tokens.FUN -> decaf.frontend.parsing.JaccTokens.FUN;
+                case Tokens.ARROW ->decaf.frontend.parsing.JaccTokens.ARROW;
                 default -> code; // single-character, use their ASCII code!
             };
         }

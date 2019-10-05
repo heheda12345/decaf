@@ -85,6 +85,7 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
                 case Tokens.ABSTRACT -> ABSTRACT;
                 case Tokens.VAR -> VAR;
                 case Tokens.FUN -> FUN;
+                case Tokens.ARROW -> ARROW;
                 default -> code; // single-character, use their ASCII code!
             };
         }

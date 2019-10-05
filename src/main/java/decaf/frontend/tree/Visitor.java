@@ -166,6 +166,10 @@ public interface Visitor<C> {
         visitOthers(that, ctx);
     }
 
+    default void visitLambda(Tree.Lambda that, C ctx) {
+        visitOthers(that, ctx);
+    }
+
     /* The default handler */
     default void visitOthers(TreeNode that, C ctx) {
         // do nothing

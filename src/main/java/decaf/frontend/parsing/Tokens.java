@@ -38,6 +38,7 @@ public interface Tokens {
     int ABSTRACT = 31;
     int VAR = 32;
     int FUN = 33;
+    int ARROW = 34;
 
     // MUST use ASCII code to encode a single-character token.
     // '!' (code=33)
