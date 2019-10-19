@@ -1,15 +1,15 @@
 package decaf.frontend.parsing;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Set;
+import java.util.TreeSet;
+
 import decaf.driver.Config;
 import decaf.driver.Phase;
 import decaf.frontend.tree.Tree;
 import decaf.lowlevel.log.IndentPrinter;
 import decaf.printing.PrettyTree;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * The alternative parser phase.
@@ -102,7 +102,11 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
         private SemValue parseSymbol(int symbol, Set<Integer> follow) {
             // System.out.println("symbol: " + symbol + " token: " + token);
             var result = query(symbol, token); // get production by lookahead symbol
-            // System.out.println("result: " + result.toString());
+            // System.out.println("result: " + result);
+            if (result == null) {
+                yyerror("syntax error");
+                return null;
+            }
             var actionId = result.getKey(); // get user-defined action
 
             var right = result.getValue(); // right-hand side of production
@@ -116,6 +120,9 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
                         ? parseSymbol(term, follow) // for non terminals: recursively parse it
                         : matchToken(term) // for terminals: match token
                 ;
+                if (params[i+1] == null) {
+                    return null; // the error was issued before
+                }
             }
             // System.out.println("return " + symbol);
             act(actionId, params); // do user-defined action
