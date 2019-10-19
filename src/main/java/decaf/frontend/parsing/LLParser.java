@@ -100,12 +100,19 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return the parsed value of {@code symbol} if parsing succeeds, or else {@code null}.
          */
         private SemValue parseSymbol(int symbol, Set<Integer> follow) {
-            // System.out.println("symbol: " + symbol + " token: " + token);
+            // System.out.println("symbol: " + symbol + "follow: " + follow);
             var result = query(symbol, token); // get production by lookahead symbol
-            // System.out.println("result: " + result);
+            // System.out.println("token: " + token + "result: " + result);
             if (result == null) {
                 yyerror("syntax error");
-                return null;
+                while (result == null) {
+                    token = nextToken();
+                    result = query(symbol, token);
+                    if (token == 0)
+                        break;
+                }
+                if (result == null)
+                    return null;
             }
             var actionId = result.getKey(); // get user-defined action
 
