@@ -100,7 +100,9 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return the parsed value of {@code symbol} if parsing succeeds, or else {@code null}.
          */
         private SemValue parseSymbol(int symbol, Set<Integer> follow) {
+            System.out.println("symbol: " + symbol + " token: " + token);
             var result = query(symbol, token); // get production by lookahead symbol
+            System.out.println("result: " + result.toString());
             var actionId = result.getKey(); // get user-defined action
 
             var right = result.getValue(); // right-hand side of production
@@ -109,12 +111,13 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
 
             for (var i = 0; i < length; i++) { // parse right-hand side symbols one by one
                 var term = right.get(i);
+                System.out.println("term of " + symbol + ": " + term.toString());
                 params[i + 1] = isNonTerminal(term)
                         ? parseSymbol(term, follow) // for non terminals: recursively parse it
                         : matchToken(term) // for terminals: match token
                 ;
             }
-
+            // System.out.println("return " + symbol);
             act(actionId, params); // do user-defined action
             return params[0];
         }
