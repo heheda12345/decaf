@@ -100,20 +100,29 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return the parsed value of {@code symbol} if parsing succeeds, or else {@code null}.
          */
         private SemValue parseSymbol(int symbol, Set<Integer> follow) {
-            // System.out.println("symbol: " + symbol + "follow: " + follow);
-            var result = query(symbol, token); // get production by lookahead symbol
-            // System.out.println("token: " + token + "result: " + result);
-            if (result == null) {
+            var begin = beginSet(symbol);
+            var end = new TreeSet<Integer>();
+            end.addAll(follow);
+            end.addAll(followSet(symbol));
+            boolean err = false;
+            // System.out.println("parsing: " + name(symbol));
+            // System.out.println("begin set: " + begin);
+            // System.out.println("end set: " + end);
+            if (!begin.contains(token)) {
                 yyerror("syntax error");
-                while (result == null) {
-                    token = nextToken();
-                    result = query(symbol, token);
-                    if (token == 0)
+                err = true;
+                while (true) {
+                    if (begin.contains(token))
                         break;
+                    if (end.contains(token))
+                        return null;
+                    token = nextToken();
+                    // System.out.println("skip & read " + name(token));
+                    if (token == 0)
+                        return null;
                 }
-                if (result == null)
-                    return null;
             }
+            var result = query(symbol, token);
             var actionId = result.getKey(); // get user-defined action
 
             var right = result.getValue(); // right-hand side of production
@@ -122,16 +131,16 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
 
             for (var i = 0; i < length; i++) { // parse right-hand side symbols one by one
                 var term = right.get(i);
-                // System.out.println("term of " + symbol + ": " + term.toString());
                 params[i + 1] = isNonTerminal(term)
-                        ? parseSymbol(term, follow) // for non terminals: recursively parse it
+                        ? parseSymbol(term, end) // for non terminals: recursively parse it
                         : matchToken(term) // for terminals: match token
                 ;
-                if (params[i+1] == null) {
-                    return null; // the error was issued before
-                }
             }
-            // System.out.println("return " + symbol);
+            if (err)
+                return null;
+            for (int i = 0; i < length; i++)
+                if (params[i + 1] == null)
+                    return null;
             act(actionId, params); // do user-defined action
             return params[0];
         }
@@ -143,9 +152,11 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return sem value
          */
         private SemValue matchToken(int expected) {
+            // System.out.println("matching " + name(expected) + " " + name(token));
             SemValue self = semValue;
             if (token != expected) {
                 yyerror("syntax error");
+                // System.out.println("token error");
                 return null;
             }
 
