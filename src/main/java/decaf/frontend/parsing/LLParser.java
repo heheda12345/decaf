@@ -39,9 +39,12 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
         }
     }
 
+    boolean isFirst; // Don't raise error of the same position
+
     private class Parser extends decaf.frontend.parsing.LLTable {
         @Override
         boolean parse() {
+            isFirst = true;
             var sv = parseSymbol(start, new TreeSet<>());
             if (sv == null) {
                 return false;
@@ -90,6 +93,18 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
             };
         }
 
+        protected void raiseError() {
+            if (isFirst) {
+                yyerror("syntax error");
+                isFirst = false;
+            }
+        }
+
+        protected int myNextToken() {
+            isFirst = true;
+            return nextToken();
+        }
+
         /**
          * Parse function for every non-terminal, with error recovery.
          * NOTE: the current implementation is buggy and may throw {@link NullPointerException}.
@@ -105,18 +120,19 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
             end.addAll(follow);
             end.addAll(followSet(symbol));
             boolean err = false;
-            // System.out.println("parsing: " + name(symbol));
+            // System.out.println("parsing: " + symbol + name(symbol) + "token " + token + name(token));
             // System.out.println("begin set: " + begin);
             // System.out.println("end set: " + end);
             if (!begin.contains(token)) {
-                yyerror("syntax error");
+                // System.out.println("error1");
+                raiseError();
                 err = true;
                 while (true) {
                     if (begin.contains(token))
                         break;
                     if (end.contains(token))
                         return null;
-                    token = nextToken();
+                    token = myNextToken();
                     // System.out.println("skip & read " + name(token));
                     if (token == 0)
                         return null;
@@ -155,12 +171,12 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
             // System.out.println("matching " + name(expected) + " " + name(token));
             SemValue self = semValue;
             if (token != expected) {
-                yyerror("syntax error");
                 // System.out.println("token error");
+                raiseError();
                 return null;
             }
 
-            token = nextToken();
+            token = myNextToken();
             return self;
         }
     }
