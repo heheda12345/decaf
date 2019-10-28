@@ -95,6 +95,7 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
 
         protected void raiseError() {
             if (isFirst) {
+                // System.out.println("error!");
                 yyerror("syntax error");
                 isFirst = false;
             }
@@ -120,7 +121,7 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
             end.addAll(follow);
             end.addAll(followSet(symbol));
             boolean err = false;
-            // System.out.println("parsing: " + symbol + name(symbol) + "token " + token + name(token));
+            // System.out.printf("parsing: %d(%s) token %d(%s)\n", symbol, name(symbol), token, name(token));
             // System.out.println("begin set: " + begin);
             // System.out.println("end set: " + end);
             if (!begin.contains(token)) {
@@ -142,6 +143,10 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
             var actionId = result.getKey(); // get user-defined action
 
             var right = result.getValue(); // right-hand side of production
+            // System.out.print(name(symbol) + "=>");
+            // for (var x: right)
+            //     System.out.print(name(x) + " ");
+            // System.out.println();
             var length = right.size();
             var params = new SemValue[length + 1];
 

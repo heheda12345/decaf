@@ -723,24 +723,38 @@ AfterNewExpr    :   Id '(' ')'
                     {
                         $$ = svId($1.id);
                     }
-                |   AtomType '[' AfterLBrack
+                |   AtomType AfterNewAtom
                     {
                         $$ = $1;
-                        for (int i = 0; i < $3.intVal; i++) {
-                            $$.type = new TArray($$.type, $1.pos);
-                        }
-                        $$.expr = $3.expr;
+                        $$ = buildFuncType($$, $2.thunkList);
+                        $$.expr = $2.expr;
                     }
                 ;
 
-AfterLBrack     :   ']' '[' AfterLBrack
+AfterNewAtom    :   '[' AfterLBrack
                     {
-                        $$ = $3;
-                        $$.intVal++;
+                        $$ = $2;
+                    }
+                |   '(' TypeList ')' AfterNewAtom
+                    {
+                        var sv = new SemValue();
+                        sv.typeList = $2.typeList;
+                        sv.pos = $1.pos;
+                        $$ = $4;
+                        $$.thunkList.add(0, sv);
+                    }
+
+AfterLBrack     :   ']' AfterNewAtom
+                    {
+                        var sv = new SemValue();
+                        sv.intVal = 1;
+                        $$ = $2;
+                        $$.thunkList.add(0, sv);
                     }
                 |   Expr ']'
                     {
                         $$ = svExpr($1.expr);
+                        $$.thunkList = new ArrayList<>();
                         $$.intVal = 0; // counter
                     }
                 ;
