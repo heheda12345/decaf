@@ -10,6 +10,8 @@ import decaf.frontend.type.Type;
 import decaf.lowlevel.instr.Temp;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -106,6 +108,27 @@ public abstract class Tree {
                 }
             }
             return methods;
+        }
+
+        public Collection<String> abstractMethods() {
+            var abSet = new HashSet<String>();
+            if (hasParent()) {
+                var parSet = superClass.abstractMethods();
+                abSet.addAll(parSet); 
+            }
+            for (var method: methods()) {
+                if (method.isAbstract()) {
+                    abSet.add(method.name);
+                } else {
+                    abSet.remove(method.name);
+                }
+            }
+            // System.out.println("abstract method of " + name);
+            // for (var method: abSet) {
+            //     System.out.print(method + " ");
+            // }
+            // System.out.println("(END)");
+            return abSet;
         }
 
         @Override

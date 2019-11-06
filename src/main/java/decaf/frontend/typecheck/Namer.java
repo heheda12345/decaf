@@ -183,6 +183,11 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             field.accept(this, ctx);
         }
         ctx.close();
+
+        if (!clazz.abstractMethods().isEmpty() &&
+            !clazz.isAbstract())
+            issue(new NotAbstractClassError(clazz.pos, clazz.name));
+
         clazz.resolved = true;
     }
 
