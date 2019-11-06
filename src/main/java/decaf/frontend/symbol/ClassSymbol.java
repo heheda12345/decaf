@@ -70,7 +70,7 @@ public final class ClassSymbol extends Symbol {
 
     @Override
     protected String str() {
-        return "class " + name + parentSymbol.map(classSymbol -> " : " + classSymbol.name).orElse("");
+        return (isAbstract?"ABSTRACT " : "") + "class " + name + parentSymbol.map(classSymbol -> " : " + classSymbol.name).orElse("");
     }
 
     /**

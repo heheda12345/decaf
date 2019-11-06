@@ -62,6 +62,26 @@ public class ClassScope extends Scope {
         return Optional.empty();
     }
 
+    public boolean hasAbstract() {
+        var scope = this;
+        while (true) {
+            for (var x: scope.symbols.keySet()) {
+                var symbol = lookup(x);
+                if (symbol.isPresent() && symbol.get() instanceof MethodSymbol) {
+                    MethodSymbol s = (MethodSymbol)symbol.get();
+                    if (s.isAbstract)
+                        return true;
+                }
+            }
+            if (scope.parentScope.isPresent()) {
+                scope = scope.parentScope.get();
+            } else {
+                break;
+            }
+        }
+        return false;
+    }
+
     /**
      * Collect all formal scopes of the defined function symbols.
      *

@@ -11,8 +11,10 @@ import decaf.lowlevel.instr.Temp;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -123,11 +125,11 @@ public abstract class Tree {
                     abSet.remove(method.name);
                 }
             }
-            // System.out.println("abstract method of " + name);
-            // for (var method: abSet) {
-            //     System.out.print(method + " ");
-            // }
-            // System.out.println("(END)");
+            System.out.println("abstract method of " + name);
+            for (var method: abSet) {
+                System.out.print(method + " ");
+            }
+            System.out.println("(END)");
             return abSet;
         }
 
@@ -1611,11 +1613,14 @@ public abstract class Tree {
         // For type check
         public MethodSymbol symbol;
         public boolean isArrayLength = false;
+        public final String methodName;
 
         public Call(Expr receiver, List<Expr> args, Pos pos) {
             super(Kind.CALL, "Call", pos);
             this.receiver = Optional.ofNullable(receiver);
             this.args = args;
+            this.methodName = receiver.displayName;
+            System.out.println("Call: methodName " + this.methodName);
         }
 
         // public Call(Optional<Expr> receiver, Id method, List<Expr> args, Pos pos) {

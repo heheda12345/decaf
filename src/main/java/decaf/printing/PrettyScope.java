@@ -36,7 +36,8 @@ public final class PrettyScope extends PrettyPrinter<Scope> {
             printer.incIndent();
             if (scope.isEmpty()) printer.println("<empty>");
             else scope.forEach(printer::println);
-            pretty(formalScope.nestedLocalScope());
+            if (formalScope.nestedLocalScope() != null)
+                pretty(formalScope.nestedLocalScope());
             printer.decIndent();
         } else if (scope.isLocalScope()) {
             var localScope = (LocalScope) scope;

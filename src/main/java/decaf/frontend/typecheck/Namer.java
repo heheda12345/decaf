@@ -8,6 +8,7 @@ import decaf.frontend.symbol.ClassSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
+import decaf.frontend.tree.Tree.MethodDef;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
 import decaf.frontend.type.FunType;
@@ -87,7 +88,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         //  static void main() { ... }
         boolean found = false;
         for (var clazz : classes.values()) {
-            if (clazz.name.equals("Main")) {
+            if (clazz.name.equals("Main") && !clazz.isAbstract()) {
                 var symbol = clazz.symbol.scope.find("main");
                 if (symbol.isPresent() && symbol.get().isMethodSymbol()) {
                     var method = (MethodSymbol) symbol.get();
@@ -182,11 +183,9 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         for (var field : clazz.fields) {
             field.accept(this, ctx);
         }
-        ctx.close();
-
-        if (!clazz.abstractMethods().isEmpty() &&
-            !clazz.isAbstract())
+        if (!clazz.isAbstract() && clazz.symbol.scope.hasAbstract())
             issue(new NotAbstractClassError(clazz.pos, clazz.name));
+        ctx.close();
 
         clazz.resolved = true;
     }
@@ -222,19 +221,20 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         if (earlier.isPresent()) {
             if (earlier.get().isMethodSymbol()) { // may be overriden
                 var suspect = (MethodSymbol) earlier.get();
-                if (!suspect.isStatic() && !method.isStatic()) {
+                if (!suspect.isStatic() && !method.isStatic() && !(!suspect.isAbstract && method.isAbstract())) {
                     // Only non-static methods can be overriden, but the type signature must be equivalent.
                     var formal = new FormalScope();
                     typeMethod(method, ctx, formal);
                     if (method.type.noError() && method.type.subtypeOf(suspect.type)) { // override success
                         var symbol = new MethodSymbol(method.name, method.type, formal, method.pos, method.modifiers,
-                                ctx.currentClass());
+                                ctx.currentClass(), method.isAbstract());
                         ctx.declare(symbol);
                         method.symbol = symbol;
-                        ctx.open(formal);
-                        if (method.body.isPresent())
+                        if (method.body.isPresent()) {
+                            ctx.open(formal);
                             method.body.get().accept(this, ctx);
-                        ctx.close();
+                            ctx.close();
+                        }
                     } else {
                         issue(new BadOverrideError(method.pos, method.name, suspect.owner.name));
                     }
@@ -251,7 +251,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         typeMethod(method, ctx, formal);
         if (method.type.noError()) {
             var symbol = new MethodSymbol(method.name, method.type, formal, method.pos, method.modifiers,
-                    ctx.currentClass());
+                    ctx.currentClass(), method.isAbstract());
             ctx.declare(symbol);
             method.symbol = symbol;
             ctx.open(formal);
@@ -269,8 +269,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var argTypes = new ArrayList<Type>();
             for (var param : method.params) {
                 param.accept(this, ctx);
-                // SOS
-                // argTypes.add(param.typeLit.get().type);
+                argTypes.add(param.typeLit.type);
             }
             method.type = new FunType(method.returnType.type, argTypes);
             ctx.close();

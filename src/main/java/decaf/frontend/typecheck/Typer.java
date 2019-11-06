@@ -443,70 +443,67 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
 
         if (rt.noError()) {
-            // SOS
-            // if (rt.isArrayType() && expr.methodName.equals("length")) { // Special case: array.length()
-            //     if (!expr.args.isEmpty()) {
-            //         issue(new BadLengthArgError(expr.pos, expr.args.size()));
-            //     }
-            //     expr.isArrayLength = true;
-            //     expr.type = BuiltInType.INT;
-            //     return;
-            // }
+            if (rt.isArrayType() && expr.methodName.equals("length")) { // Special case: array.length()
+                if (!expr.args.isEmpty()) {
+                    issue(new BadLengthArgError(expr.pos, expr.args.size()));
+                }
+                expr.isArrayLength = true;
+                expr.type = BuiltInType.INT;
+                return;
+            }
 
             if (rt.isClassType()) {
                 typeCall(expr, thisClass, ((ClassType) rt).name, ctx, false);
             } else {
-                // SOS
-                // issue(new NotClassFieldError(expr.pos, expr.methodName, rt.toString()));
+                issue(new NotClassFieldError(expr.pos, expr.methodName, rt.toString()));
             }
         }
     }
 
     private void typeCall(Tree.Call call, boolean thisClass, String className, ScopeStack ctx, boolean requireStatic) {
-        // SOS
-        // var clazz = thisClass ? ctx.currentClass() : ctx.getClass(className);
-        // var symbol = clazz.scope.lookup(call.methodName);
-        // if (symbol.isPresent()) {
-        //     if (symbol.get().isMethodSymbol()) {
-        //         var method = (MethodSymbol) symbol.get();
-        //         call.symbol = method;
-        //         call.type = method.type.returnType;
-        //         if (requireStatic && !method.isStatic()) {
-        //             issue(new NotClassFieldError(call.pos, call.methodName, clazz.type.toString()));
-        //             return;
-        //         }
+        var clazz = thisClass ? ctx.currentClass() : ctx.getClass(className);
+        var symbol = clazz.scope.lookup(call.methodName);
+        if (symbol.isPresent()) {
+            if (symbol.get().isMethodSymbol()) {
+                var method = (MethodSymbol) symbol.get();
+                call.symbol = method;
+                call.type = method.type.returnType;
+                if (requireStatic && !method.isStatic()) {
+                    issue(new NotClassFieldError(call.pos, call.methodName, clazz.type.toString()));
+                    return;
+                }
 
-        //         // Cannot call this's member methods in a static method
-        //         if (thisClass && ctx.currentMethod().isStatic() && !method.isStatic()) {
-        //             issue(new RefNonStaticError(call.pos, ctx.currentMethod().name, method.name));
-        //         }
+                // Cannot call this's member methods in a static method
+                if (thisClass && ctx.currentMethod().isStatic() && !method.isStatic()) {
+                    issue(new RefNonStaticError(call.pos, ctx.currentMethod().name, method.name));
+                }
 
-        //         // typing args
-        //         var args = call.args;
-        //         for (var arg : args) {
-        //             arg.accept(this, ctx);
-        //         }
+                // typing args
+                var args = call.args;
+                for (var arg : args) {
+                    arg.accept(this, ctx);
+                }
 
-        //         // check signature compatibility
-        //         if (method.type.arity() != args.size()) {
-        //             issue(new BadArgCountError(call.pos, method.name, method.type.arity(), args.size()));
-        //         }
-        //         var iter1 = method.type.argTypes.iterator();
-        //         var iter2 = call.args.iterator();
-        //         for (int i = 1; iter1.hasNext() && iter2.hasNext(); i++) {
-        //             Type t1 = iter1.next();
-        //             Tree.Expr e = iter2.next();
-        //             Type t2 = e.type;
-        //             if (t2.noError() && !t2.subtypeOf(t1)) {
-        //                 issue(new BadArgTypeError(e.pos, i, t2.toString(), t1.toString()));
-        //             }
-        //         }
-        //     } else {
-        //         issue(new NotClassMethodError(call.pos, call.methodName, clazz.type.toString()));
-        //     }
-        // } else {
-        //     issue(new FieldNotFoundError(call.pos, call.methodName, clazz.type.toString()));
-        // }
+                // check signature compatibility
+                if (method.type.arity() != args.size()) {
+                    issue(new BadArgCountError(call.pos, method.name, method.type.arity(), args.size()));
+                }
+                var iter1 = method.type.argTypes.iterator();
+                var iter2 = call.args.iterator();
+                for (int i = 1; iter1.hasNext() && iter2.hasNext(); i++) {
+                    Type t1 = iter1.next();
+                    Tree.Expr e = iter2.next();
+                    Type t2 = e.type;
+                    if (t2.noError() && !t2.subtypeOf(t1)) {
+                        issue(new BadArgTypeError(e.pos, i, t2.toString(), t1.toString()));
+                    }
+                }
+            } else {
+                issue(new NotClassMethodError(call.pos, call.methodName, clazz.type.toString()));
+            }
+        } else {
+            issue(new FieldNotFoundError(call.pos, call.methodName, clazz.type.toString()));
+        }
     }
 
     @Override
