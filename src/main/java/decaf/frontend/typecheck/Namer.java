@@ -294,18 +294,18 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
             return;
         }
-        // SOS
-        // def.typeLit.get().accept(this, ctx);
-        // if (def.typeLit.get().type.eq(BuiltInType.VOID)) {
-        //     issue(new BadVarTypeError(def.pos, def.name));
-        //     return;
-        // }
 
-        // if (def.typeLit.get().type.noError()) {
-        //     var symbol = new VarSymbol(def.name, def.typeLit.get().type, def.id.pos);
-        //     ctx.declare(symbol);
-        //     def.symbol = symbol;
-        // }
+        def.typeLit.accept(this, ctx);
+        if (def.typeLit.type.eq(BuiltInType.VOID)) {
+            issue(new BadVarTypeError(def.pos, def.name));
+            return;
+        }
+
+        if (def.typeLit.type.noError()) {
+            var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
+            ctx.declare(symbol);
+            def.symbol = symbol;
+        }
     }
 
     @Override

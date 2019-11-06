@@ -37,6 +37,11 @@ public interface TypeLitVisited extends Visitor<ScopeStack>, ErrorIssuer {
     }
 
     @Override
+    default void visitTVar(Tree.TVar that, ScopeStack ctx) {
+        that.type = BuiltInType.VAR;
+    }
+
+    @Override
     default void visitTClass(Tree.TClass typeClass, ScopeStack ctx) {
         var c = ctx.lookupClass(typeClass.id.name);
         if (c.isEmpty()) {

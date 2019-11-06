@@ -6,6 +6,7 @@ import decaf.driver.error.*;
 import decaf.frontend.scope.ScopeStack;
 import decaf.frontend.symbol.ClassSymbol;
 import decaf.frontend.symbol.MethodSymbol;
+import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.tree.Tree;
@@ -549,13 +550,23 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         localVarDefPos = Optional.ofNullable(stmt.id.pos);
         initVal.accept(this, ctx);
         localVarDefPos = Optional.empty();
-        // SOS stmt.symbol might be null
-        // var lt = stmt.symbol.type;
-        // var rt = initVal.type;
+        
+        var lt = stmt.symbol.type;
+        var rt = initVal.type;
 
-        // if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
-        //     issue(new IncompatBinOpError(stmt.assignPos, lt.toString(), "=", rt.toString()));
-        // }
+        if (lt.eq(BuiltInType.VAR)) {
+            VarSymbol ns = new VarSymbol(stmt.symbol.name, rt, stmt.symbol.pos);
+            ns.setDomain(stmt.symbol.domain());
+            stmt.symbol = ns;
+            ctx.updateSymbol(stmt.symbol.name, ns);
+            lt = rt;
+            if (rt.eq(BuiltInType.VOID))
+                issue(new BadVarTypeError(stmt.pos, stmt.name));
+        }
+
+        if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
+            issue(new IncompatBinOpError(stmt.assignPos, lt.toString(), "=", rt.toString()));
+        }
     }
 
     // Only usage: check if an initializer cyclically refers to the declared variable, e.g. var x = x + 1

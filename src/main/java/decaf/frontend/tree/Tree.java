@@ -539,7 +539,7 @@ public abstract class Tree {
      */
     public static class LocalVarDef extends Stmt {
         // Tree elements
-        public Optional<TypeLit> typeLit;
+        public TypeLit typeLit;
         public Id id;
         public Pos assignPos;
         public Optional<Expr> initVal;
@@ -552,7 +552,7 @@ public abstract class Tree {
             // pos = id.pos, assignPos = position of the '='
             // TODO: looks not very consistent, maybe we shall always report error simply at `pos`, not `assignPos`?
             super(Kind.LOCAL_VAR_DEF, "LocalVarDef", pos);
-            this.typeLit = Optional.ofNullable((typeLit instanceof TVar) ? null : typeLit);
+            this.typeLit = typeLit;
             this.id = id;
             this.assignPos = assignPos;
             this.initVal = initVal;
@@ -566,7 +566,7 @@ public abstract class Tree {
         @Override
         public Object treeElementAt(int index) {
             return switch (index) {
-                case 0 -> typeLit;
+                case 0 -> Optional.ofNullable(typeLit);
                 case 1 -> id;
                 case 2 -> initVal;
                 default -> throw new IndexOutOfBoundsException(index);

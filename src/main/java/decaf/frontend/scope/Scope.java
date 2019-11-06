@@ -72,6 +72,10 @@ public abstract class Scope implements Iterable<Symbol> {
         symbol.setDomain(this);
     }
 
+    public void update(String key, Symbol symbol) {
+        symbols.put(key, symbol);
+    }
+
     @Override
     public Iterator<Symbol> iterator() {
         var list = new ArrayList<>(symbols.values());

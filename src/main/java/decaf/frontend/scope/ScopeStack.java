@@ -151,6 +151,13 @@ public class ScopeStack {
         return lookup(key);
     }
 
+    public void updateSymbol(String key, Symbol symbol) {
+        if (currentScope().isFormalOrLocalScope())
+            updateWhile(key, symbol, Scope::isFormalOrLocalScope, whatever -> true);
+        else
+            updateWhile(key, symbol, whatever -> true, whatever -> true);
+    }
+
     /**
      * Tell if a class is already defined in the global scope.
      *
@@ -204,5 +211,20 @@ public class ScopeStack {
             if (symbol.isPresent() && validator.test(symbol.get())) return symbol;
         }
         return cond.test(global) ? global.find(key) : Optional.empty();
+    }
+
+    private void updateWhile(String key, Symbol newSymbol, Predicate<Scope> cond, Predicate<Symbol> validator) {
+        System.out.println(newSymbol);
+        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
+        while (iter.hasPrevious()) {
+            var scope = iter.previous();
+            if (!cond.test(scope)) break;
+            var symbol = scope.find(key);
+            if (symbol.isPresent() && validator.test(symbol.get())) {
+                scope.update(key, newSymbol);
+                return;
+            }
+        }
+        global.update(key, newSymbol);  // NOTE: global.update will be called regardless of cond
     }
 }
