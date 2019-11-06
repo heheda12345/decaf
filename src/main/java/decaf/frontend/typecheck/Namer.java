@@ -158,13 +158,13 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var base = global.getClass(clazz.parent.get().name);
             var type = new ClassType(clazz.name, base.type);
             var scope = new ClassScope(base.scope);
-            var symbol = new ClassSymbol(clazz.name, base, type, scope, clazz.pos);
+            var symbol = new ClassSymbol(clazz.name, base, type, scope, clazz.pos, clazz.isAbstract());
             global.declare(symbol);
             clazz.symbol = symbol;
         } else {
             var type = new ClassType(clazz.name);
             var scope = new ClassScope();
-            var symbol = new ClassSymbol(clazz.name, type, scope, clazz.pos);
+            var symbol = new ClassSymbol(clazz.name, type, scope, clazz.pos, clazz.isAbstract());
             global.declare(symbol);
             clazz.symbol = symbol;
         }
@@ -232,7 +232,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         ctx.declare(symbol);
                         method.symbol = symbol;
                         ctx.open(formal);
-                        method.body.get().accept(this, ctx);
+                        if (method.body.isPresent())
+                            method.body.get().accept(this, ctx);
                         ctx.close();
                     } else {
                         issue(new BadOverrideError(method.pos, method.name, suspect.owner.name));
@@ -254,7 +255,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             ctx.declare(symbol);
             method.symbol = symbol;
             ctx.open(formal);
-            method.body.get().accept(this, ctx);
+            if (method.body.isPresent())
+                method.body.get().accept(this, ctx);
             ctx.close();
         }
     }
@@ -267,7 +269,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var argTypes = new ArrayList<Type>();
             for (var param : method.params) {
                 param.accept(this, ctx);
-                argTypes.add(param.typeLit.get().type);
+                // SOS
+                // argTypes.add(param.typeLit.get().type);
             }
             method.type = new FunType(method.returnType.type, argTypes);
             ctx.close();
@@ -291,17 +294,18 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
             return;
         }
-        def.typeLit.get().accept(this, ctx);
-        if (def.typeLit.get().type.eq(BuiltInType.VOID)) {
-            issue(new BadVarTypeError(def.pos, def.name));
-            return;
-        }
+        // SOS
+        // def.typeLit.get().accept(this, ctx);
+        // if (def.typeLit.get().type.eq(BuiltInType.VOID)) {
+        //     issue(new BadVarTypeError(def.pos, def.name));
+        //     return;
+        // }
 
-        if (def.typeLit.get().type.noError()) {
-            var symbol = new VarSymbol(def.name, def.typeLit.get().type, def.id.pos);
-            ctx.declare(symbol);
-            def.symbol = symbol;
-        }
+        // if (def.typeLit.get().type.noError()) {
+        //     var symbol = new VarSymbol(def.name, def.typeLit.get().type, def.id.pos);
+        //     ctx.declare(symbol);
+        //     def.symbol = symbol;
+        // }
     }
 
     @Override

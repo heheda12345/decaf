@@ -22,20 +22,23 @@ public final class ClassSymbol extends Symbol {
      * Associated class scope of this class.
      */
     public final ClassScope scope;
+    public final boolean isAbstract;
 
-    public ClassSymbol(String name, ClassType type, ClassScope scope, Pos pos) {
+    public ClassSymbol(String name, ClassType type, ClassScope scope, Pos pos, boolean isAbstract) {
         super(name, type, pos);
         this.parentSymbol = Optional.empty();
         this.scope = scope;
         this.type = type;
+        this.isAbstract = isAbstract;
         scope.setOwner(this);
     }
 
-    public ClassSymbol(String name, ClassSymbol parentSymbol, ClassType type, ClassScope scope, Pos pos) {
+    public ClassSymbol(String name, ClassSymbol parentSymbol, ClassType type, ClassScope scope, Pos pos, boolean isAbstract) {
         super(name, type, pos);
         this.parentSymbol = Optional.of(parentSymbol);
         this.scope = scope;
         this.type = type;
+        this.isAbstract = isAbstract;
         scope.setOwner(this);
     }
 

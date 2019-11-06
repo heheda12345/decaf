@@ -62,9 +62,11 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitMethodDef(Tree.MethodDef method, ScopeStack ctx) {
         ctx.open(method.symbol.scope);
-        method.body.get().accept(this, ctx);
-        if (!method.symbol.type.returnType.isVoidType() && !method.body.get().returns) {
-            issue(new MissingReturnError(method.body.get().pos));
+        if (method.body.isPresent()) {
+            method.body.get().accept(this, ctx);
+            if (!method.symbol.type.returnType.isVoidType() && !method.body.get().returns) {
+                issue(new MissingReturnError(method.body.get().pos));
+            }
         }
         ctx.close();
     }
@@ -300,6 +302,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         if (clazz.isPresent()) {
             expr.symbol = clazz.get();
             expr.type = expr.symbol.type;
+            if (clazz.get().isAbstract)
+                issue(new UseAbstractClassError(expr.pos, expr.clazz.name));
         } else {
             issue(new ClassNotFoundError(expr.pos, expr.clazz.name));
             expr.type = BuiltInType.ERROR;
@@ -541,17 +545,17 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitLocalVarDef(Tree.LocalVarDef stmt, ScopeStack ctx) {
         if (stmt.initVal.isEmpty()) return;
-
         var initVal = stmt.initVal.get();
         localVarDefPos = Optional.ofNullable(stmt.id.pos);
         initVal.accept(this, ctx);
         localVarDefPos = Optional.empty();
-        var lt = stmt.symbol.type;
-        var rt = initVal.type;
+        // SOS stmt.symbol might be null
+        // var lt = stmt.symbol.type;
+        // var rt = initVal.type;
 
-        if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
-            issue(new IncompatBinOpError(stmt.assignPos, lt.toString(), "=", rt.toString()));
-        }
+        // if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
+        //     issue(new IncompatBinOpError(stmt.assignPos, lt.toString(), "=", rt.toString()));
+        // }
     }
 
     // Only usage: check if an initializer cyclically refers to the declared variable, e.g. var x = x + 1
