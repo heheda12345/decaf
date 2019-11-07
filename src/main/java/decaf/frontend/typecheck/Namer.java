@@ -5,10 +5,12 @@ import decaf.driver.Phase;
 import decaf.driver.error.*;
 import decaf.frontend.scope.*;
 import decaf.frontend.symbol.ClassSymbol;
+import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Tree.MethodDef;
+import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
 import decaf.frontend.type.FunType;
@@ -277,6 +279,36 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     }
 
     @Override
+    public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
+        // System.out.println("VisitLambda begin");
+        var ls = new LambdaScope();
+        typeLambda(lambda, ctx, ls);
+        // System.out.println("visitLambda middle: " + lambda.type);
+        if (lambda.type.noError()) {
+            assert lambda.type instanceof FunType;
+            var symbol = new LambdaSymbol(lambda.name, (FunType) lambda.type, ls, lambda.pos);
+            ctx.declare(symbol);
+            ctx.open(ls);
+            lambda.ret.accept(this, ctx);
+            ctx.close();
+        }
+        // System.out.println("visitLambda finish: " + lambda.type);
+    }
+
+    private void typeLambda(Tree.Lambda lambda, ScopeStack ctx, LambdaScope ls) {
+        ctx.open(ls);
+        var argTypes = new ArrayList<Type>();
+        for (var param: lambda.params) {
+            param.accept(this, ctx);
+            argTypes.add(param.typeLit.type);
+        }
+        lambda.type = new FunType(BuiltInType.VAR, argTypes);
+        ctx.close();
+    }
+
+
+
+    @Override
     public void visitBlock(Tree.Block block, ScopeStack ctx) {
         block.scope = new LocalScope(ctx.currentScope());
         ctx.open(block.scope);
@@ -304,6 +336,9 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
             ctx.declare(symbol);
             def.symbol = symbol;
+            if (def.initVal.isPresent() && def.initVal.get() instanceof Tree.Lambda) {
+                def.initVal.get().accept(this, ctx);
+            }
         }
     }
 

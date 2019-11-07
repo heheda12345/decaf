@@ -1571,13 +1571,26 @@ public abstract class Tree {
      * </pre>
      */
     public static class Lambda extends Expr {
-        List<LocalVarDef> params;
-        TreeNode ret;
+        public List<LocalVarDef> params;
+        public TreeNode ret;
+        public enum LambdaType {EXPR, BLOCK};
+        public final LambdaType ty;
+        public Expr expr;
+        public Block block;
+        public String name;
 
         public Lambda(List<LocalVarDef> params, TreeNode ret, Pos pos) {
             super(Kind.LAMBDA, "Lambda", pos);
             this.params = params;
             this.ret = ret;
+            if (ret instanceof Block) {
+                ty = LambdaType.BLOCK;
+                this.block = (Block)ret;
+            } else {
+                ty = LambdaType.EXPR;
+                this.expr = (Expr)ret;
+            }
+            this.name = "lambda@"+pos.toString();
         }
 
         @Override

@@ -49,6 +49,10 @@ public final class VarSymbol extends Symbol {
         return definedIn.isClassScope();
     }
 
+    public boolean isLambdaVar() {
+        return definedIn.isLambdaScope();
+    }
+
     /**
      * Get the owner of a member variable, which is a class symbol.
      *
