@@ -5,11 +5,14 @@ import decaf.driver.Phase;
 import decaf.driver.error.*;
 import decaf.frontend.scope.ScopeStack;
 import decaf.frontend.symbol.ClassSymbol;
+import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.tree.Tree;
+import decaf.frontend.tree.Tree.Lambda;
+import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.ArrayType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
@@ -349,6 +352,11 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     return;
                 }
             }
+            // SOS wrong place
+            if (symbol.get().isLambdaSymbol()) {
+                System.out.println("typer: find lambda symbol " + expr.name);
+                expr.accept(this, ctx);
+            }
 
             expr.type = BuiltInType.ERROR;
             issue(new UndeclVarError(expr.pos, expr.name));
@@ -504,6 +512,19 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         } else {
             issue(new FieldNotFoundError(call.pos, call.methodName, clazz.type.toString()));
         }
+    }
+
+    @Override
+    public void visitLambda(Lambda lambda, ScopeStack ctx) {
+        ctx.open(lambda.scope);
+        if (lambda.ty == LambdaType.EXPR) {
+            ctx.open(lambda.scope.nestedLocalScope());
+        }
+        lambda.ret.accept(this, ctx);
+        if (lambda.ty == LambdaType.EXPR) {
+            ctx.close();
+        }
+        ctx.close();
     }
 
     @Override

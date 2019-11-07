@@ -129,7 +129,21 @@ public class ScopeStack {
      * @return innermost found symbol before {@code pos} (if any)
      */
     public Optional<Symbol> lookupBefore(String key, Pos pos) {
-        return findWhile(key, whatever -> true, s -> !(s.domain().isLocalScope() && s.pos.compareTo(pos) >= 0));
+        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
+        // System.out.println("lookup before " + key + pos);
+        while (iter.hasPrevious()) {
+            var scope = iter.previous();
+            // System.out.println("looking " + scope);
+            var symbol = scope.find(key);
+            if (symbol.isPresent() && !(symbol.get().domain().isLocalScope() && symbol.get().pos.compareTo(pos) >= 0)) return symbol;
+            if (scope.lambdaDef.isPresent()) {
+                Symbol sy = scope.lambdaDef.get();
+                // System.out.println("lambda scope in before: " + sy.name + " key: " + key);
+                if (sy.name == key)
+                    return Optional.ofNullable(sy);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

@@ -1,7 +1,9 @@
 package decaf.frontend.tree;
 
 import decaf.frontend.scope.GlobalScope;
+import decaf.frontend.scope.LambdaScope;
 import decaf.frontend.scope.LocalScope;
+import decaf.frontend.scope.Scope;
 import decaf.frontend.symbol.ClassSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.Symbol;
@@ -1578,6 +1580,7 @@ public abstract class Tree {
         public Expr expr;
         public Block block;
         public String name;
+        public LambdaScope scope;
 
         public Lambda(List<LocalVarDef> params, TreeNode ret, Pos pos) {
             super(Kind.LAMBDA, "Lambda", pos);

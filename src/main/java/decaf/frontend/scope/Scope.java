@@ -30,6 +30,7 @@ public abstract class Scope implements Iterable<Symbol> {
 
     public Scope(Kind kind) {
         this.kind = kind;
+        this.lambdaDef = Optional.empty();
     }
 
     /**
@@ -114,6 +115,8 @@ public abstract class Scope implements Iterable<Symbol> {
     public boolean isFormalOrLocalOrLambdaScope() {
         return isFormalScope() || isLocalScope() || isLambdaScope();
     }
+
+    public Optional<Symbol> lambdaDef;
 
     protected Map<String, Symbol> symbols = new TreeMap<>();
 }

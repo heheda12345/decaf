@@ -1,6 +1,8 @@
 package decaf.frontend.scope;
 
 import decaf.frontend.symbol.LambdaSymbol;
+import decaf.frontend.symbol.Symbol;
+import decaf.frontend.tree.Pos;
 
 /**
  * Lambda scope: stores parameter variable symbols. It is owned by a lambda symbol.

@@ -16,6 +16,7 @@ import decaf.frontend.type.ClassType;
 import decaf.frontend.type.FunType;
 import decaf.frontend.type.Type;
 
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
@@ -289,7 +290,14 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var symbol = new LambdaSymbol(lambda.name, (FunType) lambda.type, ls, lambda.pos);
             ctx.declare(symbol);
             ctx.open(ls);
+            if (lambda.ty == LambdaType.EXPR) {
+                var s = new LocalScope(ls);
+                ctx.open(s); 
+            }
             lambda.ret.accept(this, ctx);
+            if (lambda.ty == LambdaType.EXPR) {
+                ctx.close();
+            }
             ctx.close();
         }
         // System.out.println("visitLambda finish: " + lambda.type);
@@ -303,6 +311,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             argTypes.add(param.typeLit.type);
         }
         lambda.type = new FunType(BuiltInType.VAR, argTypes);
+        lambda.scope = ls;
         ctx.close();
     }
 
@@ -338,6 +347,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             def.symbol = symbol;
             if (def.initVal.isPresent() && def.initVal.get() instanceof Tree.Lambda) {
                 def.initVal.get().accept(this, ctx);
+                var lb = (Tree.Lambda) def.initVal.get();
+                lb.scope.nestedLocalScope().lambdaDef = Optional.ofNullable(def.symbol);
             }
         }
     }
