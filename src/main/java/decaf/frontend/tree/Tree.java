@@ -4,6 +4,7 @@ import decaf.frontend.scope.GlobalScope;
 import decaf.frontend.scope.LocalScope;
 import decaf.frontend.symbol.ClassSymbol;
 import decaf.frontend.symbol.MethodSymbol;
+import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.type.FunType;
 import decaf.frontend.type.Type;
@@ -568,7 +569,7 @@ public abstract class Tree {
         @Override
         public Object treeElementAt(int index) {
             return switch (index) {
-                case 0 -> Optional.ofNullable(typeLit);
+                case 0 -> Optional.ofNullable(typeLit instanceof TVar ? null : typeLit);
                 case 1 -> id;
                 case 2 -> initVal;
                 default -> throw new IndexOutOfBoundsException(index);
@@ -1125,7 +1126,7 @@ public abstract class Tree {
         // For convenience
         public String name;
         // For type check
-        public VarSymbol symbol;
+        public Symbol symbol;
         public boolean isClassName = false;
 
         public VarSel(Optional<Expr> receiver, Id variable, Pos pos) {
@@ -1608,19 +1609,20 @@ public abstract class Tree {
      */
     public static class Call extends Expr {
         // Tree elements
-        public Optional<Expr> receiver;
+        public Optional<Expr> caller;
+        public Optional<Expr> receiver; // SOS for compile
         public List<Expr> args;
         // For type check
         public MethodSymbol symbol;
         public boolean isArrayLength = false;
         public final String methodName;
 
-        public Call(Expr receiver, List<Expr> args, Pos pos) {
+        public Call(Expr caller, List<Expr> args, Pos pos) {
             super(Kind.CALL, "Call", pos);
-            this.receiver = Optional.ofNullable(receiver);
+            this.caller = Optional.ofNullable(caller);
             this.args = args;
-            this.methodName = receiver.displayName;
-            System.out.println("Call: methodName " + this.methodName);
+            this.methodName = caller instanceof VarSel ? ((VarSel)caller).name : "NoMethodName";
+            // System.out.println("Call: methodName " + this.methodName);
         }
 
         // public Call(Optional<Expr> receiver, Id method, List<Expr> args, Pos pos) {
@@ -1646,13 +1648,13 @@ public abstract class Tree {
          * Reversed for type check.
          */
         public void setThis() {
-            this.receiver = Optional.of(new This(pos));
+            this.caller = Optional.of(new This(pos));
         }
 
         @Override
         public Object treeElementAt(int index) {
             return switch (index) {
-                case 0 -> receiver;
+                case 0 -> caller;
                 case 1 -> args;
                 default -> throw new IndexOutOfBoundsException(index);
             };
