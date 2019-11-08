@@ -1625,7 +1625,7 @@ public abstract class Tree {
      */
     public static class Call extends Expr {
         // Tree elements
-        public Optional<Expr> caller;
+        public Expr caller;
         public Optional<Expr> receiver; // SOS for compile
         public List<Expr> args;
         // For type check
@@ -1635,7 +1635,7 @@ public abstract class Tree {
 
         public Call(Expr caller, List<Expr> args, Pos pos) {
             super(Kind.CALL, "Call", pos);
-            this.caller = Optional.ofNullable(caller);
+            this.caller = caller;
             this.args = args;
             this.methodName = caller instanceof VarSel ? ((VarSel)caller).name : "NoMethodName";
             // System.out.println("Call: methodName " + this.methodName);
@@ -1664,7 +1664,7 @@ public abstract class Tree {
          * Reversed for type check.
          */
         public void setThis() {
-            this.caller = Optional.of(new This(pos));
+            ((VarSel)this.caller).receiver = Optional.of(new This(pos));
         }
 
         @Override

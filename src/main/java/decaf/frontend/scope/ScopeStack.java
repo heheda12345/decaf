@@ -143,7 +143,7 @@ public class ScopeStack {
                     return Optional.ofNullable(sy);
             }
         }
-        return Optional.empty();
+        return global.find(key);
     }
 
     /**
