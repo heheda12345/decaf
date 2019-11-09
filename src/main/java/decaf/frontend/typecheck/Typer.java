@@ -96,6 +96,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
         ctx.close();
         block.returns = !block.stmts.isEmpty() && block.stmts.get(block.stmts.size() - 1).returns;
+        if (block.returns)
+            block.returnType = block.stmts.get(block.stmts.size() - 1).returnType;
     }
 
     @Override
@@ -123,6 +125,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         stmt.falseBranch.ifPresent(b -> b.accept(this, ctx));
         // if-stmt returns a value iff both branches return
         stmt.returns = stmt.trueBranch.returns && stmt.falseBranch.isPresent() && stmt.falseBranch.get().returns;
+        if (stmt.returns)
+            stmt.returnType = stmt.trueBranch.returnType;
     }
 
     @Override
@@ -163,6 +167,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new BadReturnTypeError(stmt.pos, expected.toString(), actual.toString()));
         }
         stmt.returns = stmt.expr.isPresent();
+        if (stmt.returns)
+            stmt.returnType = stmt.expr.get().symbol.type;
     }
 
     @Override
@@ -331,7 +337,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitVarSel(Tree.VarSel expr, ScopeStack ctx) {
-        System.out.println(expr.pos + "visit varsel " + expr);
+        // System.out.println(expr.pos + "visit varsel " + expr);
         assert expr.name.isPresent();
         if (expr.receiver.isEmpty()) {
             // Variable, which should be complicated since a legal variable could refer to a local var,
@@ -340,7 +346,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
             var symbol = ctx.lookupBefore(expr.name.get(), localVarDefPos.orElse(expr.pos));
             if (symbol.isPresent()) {
-                System.out.println("symbol present " + symbol.get());
+                // System.out.println("symbol present " + symbol.get());
                 if (symbol.get().isVarSymbol()) {
                     var var = (VarSymbol) symbol.get();
                     if (var.isMemberVar()) {
@@ -361,7 +367,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                 }
 
                 if (symbol.get().isMethodSymbol()) { // from visitCall
-                    System.out.println("typer: find method symbol " + symbol.get().name + symbol.get().type);
+                    // System.out.println("typer: find method symbol " + symbol.get().name + symbol.get().type);
                     var method = (MethodSymbol)symbol.get();
                     if (ctx.currentMethod().isStatic() && !method.isStatic()) {
                         issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, method.name));
@@ -373,7 +379,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
                 if (symbol.get().isLambdaSymbol()) {
                     // maybe should check as method?
-                    System.out.println("typer: find lambda symbol " + symbol.get().name + symbol.get().type);
+                    // System.out.println("typer: find lambda symbol " + symbol.get().name + symbol.get().type);
                     expr.symbol = symbol.get();
                     return;
                     // expr.accept(this, ctx);
@@ -388,7 +394,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             allowClassNameVar = true;
             receiver.accept(this, ctx);
             allowClassNameVar = false;
-            System.out.println("has receiver " + receiver.symbol.type + receiver.symbol.name);
+            // System.out.println("has receiver " + receiver.symbol.type + receiver.symbol.name);
             var rt = receiver.symbol.type;
             expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
             
@@ -398,14 +404,14 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     return;
                 }
                 var ct = (ClassType) rt;
-                System.out.println("search name " + ct.name + " " + expr.name.get());
+                // System.out.println("search name " + ct.name + " " + expr.name.get());
                 var field = ctx.getClass(ct.name).scope.lookup(expr.name.get());
                 if (!field.isPresent()) {
                     issue(new FieldNotFoundError(expr.pos, expr.name.get(), ct.toString()));
                     return;
                 }
                 var var = field.get();
-                System.out.println("find field " + var.type + var.name);
+                // System.out.println("find field " + var.type + var.name);
                 if (receiver instanceof Tree.VarSel) {
                     var v1 = (Tree.VarSel) receiver;
                     if (v1.isClassName) {
@@ -430,20 +436,20 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                 }
 
                 if (var.isMethodSymbol()) {
-                    System.out.println("typer: find method symbol " + var.name + var.type);
+                    // System.out.println("typer: find method symbol " + var.name + var.type);
                     expr.symbol = var;
                     return;
                 }
 
                 if (var.isLambdaSymbol()) {
                     // maybe should check as method?
-                    System.out.println("typer: find lambda symbol " + var.name + var.type);
+                    // System.out.println("typer: find lambda symbol " + var.name + var.type);
                     expr.symbol = var;
                     return;
                 }
 
                 if (var.isClassSymbol()) {
-                    System.out.println("typer: find class symbol " + var.name + var.type);
+                    // System.out.println("typer: find class symbol " + var.name + var.type);
                     expr.symbol = var;
                     return;
                 }
@@ -459,23 +465,25 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         expr.index.accept(this, ctx);
         var at = expr.array.symbol.type;
         var it = expr.index.symbol.type;
-
-        if (!at.isArrayType()) {
-            issue(new NotArrayError(expr.array.pos));
-            expr.symbol = new VarSymbol("NONAMEINDEXSELERR", BuiltInType.ERROR, expr.pos);
-            return;
-        }
-        expr.symbol = new VarSymbol("NONAMEINDEXSEL", ((ArrayType) at).elementType, expr.pos);
-        if (!it.eq(BuiltInType.INT)) {
-            issue(new SubNotIntError(expr.pos));
+        expr.symbol = new VarSymbol("NONAMEINDEXSELERR", BuiltInType.ERROR, expr.pos);
+        if (!at.hasError()) {
+            if (!at.isArrayType()) {
+                issue(new NotArrayError(expr.array.pos));
+                return;
+            }
+            expr.symbol = new VarSymbol("NONAMEINDEXSEL", ((ArrayType) at).elementType, expr.pos);
+            if (!it.hasError() && !it.eq(BuiltInType.INT)) {
+                issue(new SubNotIntError(expr.pos));
+            }
         }
     }
 
     @Override
     public void visitCall(Tree.Call expr, ScopeStack ctx) {
-        System.out.println(expr.pos + "visitCall" + expr);
-        expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
+        // System.out.println(expr.pos + "visitCall" + expr);
         expr.caller.accept(this, ctx);
+        expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
+        // System.out.println(expr.pos + "visitcallafter" + expr.caller.symbol.type + expr.caller.name);
         if (expr.caller.symbol.type.noError()) {
             if (!expr.caller.symbol.type.isFuncType()) {
                 issue(new NotCallableError(expr.pos, expr.caller.symbol.type.toString()));
@@ -483,16 +491,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             }
 
             String callerName = expr.name.isPresent() ? "function '"+expr.name.get()+"'" : "lambda expression";
-            
+            expr.symbol = new VarSymbol("NonameCanCallErr",  ((FunType)expr.caller.symbol.type).returnType, expr.pos);
+            // System.out.println(expr.pos + "call, set rettype " + expr.symbol.type);
             if (expr.caller instanceof VarSel) {
                 VarSel caller = (VarSel) expr.caller;
                 if (caller.receiver.isPresent()) {
-                    var receiver = caller.receiver.get();
-                    allowClassNameVar = true;
-                    receiver.accept(this, ctx);
-                    allowClassNameVar = false;
-                    var rt = receiver.symbol.type;
-    
+                    var rt = caller.receiver.get().symbol.type;
                     if (rt.isArrayType() && expr.name.isPresent() && expr.name.get().equals("length")) { // Special case: array.length()
                         if (!expr.args.isEmpty()) {
                             issue(new BadLengthArgError(expr.pos, expr.args.size()));
@@ -540,6 +544,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         } else {
             Tree.Block blk = (Tree.Block) lambda.ret;
             lambda.ret.accept(this, ctx);
+            // System.out.println("visit lambda, blk ret " + blk.returnType);
             lambda.symbol = new VarSymbol("NonameBlockLambda", new FunType(blk.returnType, ((FunType)lambda.symbol.type).argTypes), lambda.pos);
         }
         ctx.close();
@@ -588,7 +593,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         
         var lt = stmt.symbol.type;
         var rt = initVal.symbol.type;
-        System.out.println(stmt.pos + "in localvardef: lt " + lt + "rt " + rt + initVal.symbol.name);
+        // System.out.println(stmt.pos + "in localvardef: lt " + lt + "rt " + rt + initVal.symbol.name);
         if (lt.eq(BuiltInType.VAR)) {
             VarSymbol ns = new VarSymbol(stmt.symbol.name, rt, stmt.symbol.pos);
             ns.setDomain(stmt.symbol.domain());

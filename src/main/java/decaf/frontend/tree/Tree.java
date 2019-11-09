@@ -9,6 +9,7 @@ import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
+import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.FunType;
 import decaf.frontend.type.Type;
 import decaf.lowlevel.instr.Temp;
@@ -530,7 +531,7 @@ public abstract class Tree {
          * For type check: does this return a value?
          */
         public boolean returns = false;
-        public Type returnType;
+        public Type returnType = BuiltInType.VOID;
 
         public boolean isBlock() {
             return false;

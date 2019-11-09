@@ -9,9 +9,20 @@ import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
+import decaf.frontend.tree.Tree.Assign;
+import decaf.frontend.tree.Tree.Binary;
+import decaf.frontend.tree.Tree.Call;
+import decaf.frontend.tree.Tree.ClassCast;
+import decaf.frontend.tree.Tree.ClassTest;
+import decaf.frontend.tree.Tree.ExprEval;
+import decaf.frontend.tree.Tree.IndexSel;
 import decaf.frontend.tree.Tree.MethodDef;
+import decaf.frontend.tree.Tree.NewArray;
+import decaf.frontend.tree.Tree.Print;
+import decaf.frontend.tree.Tree.Return;
 import decaf.frontend.tree.Tree.TLambda;
 import decaf.frontend.tree.Tree.TVoid;
+import decaf.frontend.tree.Tree.Unary;
 import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
@@ -281,8 +292,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
     }
 
-    @Override
-    public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
+    @Override public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
         var ls = new LambdaScope();
         typeLambda(lambda, ctx, ls);
         if (lambda.symbol.type.noError()) {
@@ -347,6 +357,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
 
         def.typeLit.accept(this, ctx);
+        if (def.initVal.isPresent())
+            def.initVal.get().accept(this, ctx);
         if (def.typeLit.type.eq(BuiltInType.VOID)) {
             issue(new BadVarTypeError(def.pos, def.name));
             return;
@@ -357,7 +369,6 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             ctx.declare(symbol);
             def.symbol = symbol;
             if (def.initVal.isPresent() && def.initVal.get() instanceof Tree.Lambda) {
-                def.initVal.get().accept(this, ctx);
                 var lb = (Tree.Lambda) def.initVal.get();
                 lb.scope.nestedLocalScope().lambdaDef = Optional.ofNullable(def.symbol);
             }
@@ -369,6 +380,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         loop.scope = new LocalScope(ctx.currentScope());
         ctx.open(loop.scope);
         loop.init.accept(this, ctx);
+        loop.cond.accept(this, ctx);
         for (var stmt : loop.body.stmts) {
             stmt.accept(this, ctx);
         }
@@ -377,13 +389,74 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitIf(Tree.If stmt, ScopeStack ctx) {
+        stmt.cond.accept(this, ctx);
         stmt.trueBranch.accept(this, ctx);
         stmt.falseBranch.ifPresent(b -> b.accept(this, ctx));
     }
 
     @Override
     public void visitWhile(Tree.While loop, ScopeStack ctx) {
+        loop.cond.accept(this, ctx);
         loop.body.accept(this, ctx);
+    }
+
+    @Override
+    public void visitCall(Call call, ScopeStack ctx) {
+        call.caller.accept(this, ctx);
+    }
+
+    @Override
+    public void visitAssign(Assign that, ScopeStack ctx) {
+        that.rhs.accept(this, ctx);
+    }
+
+    @Override
+    public void visitExprEval(ExprEval that, ScopeStack ctx) {
+        that.expr.accept(this, ctx);
+    }
+
+    @Override
+    public void visitReturn(Return that, ScopeStack ctx) {
+        that.expr.ifPresent(e->e.accept(this, ctx));
+    }
+
+    @Override
+    public void visitPrint(Print that, ScopeStack ctx) {
+        for (var e: that.exprs)
+            e.accept(this, ctx);
+    }
+
+
+    @Override
+    public void visitIndexSel(IndexSel that, ScopeStack ctx) {
+        that.array.accept(this, ctx);
+        that.index.accept(this, ctx);
+    }
+
+    @Override
+    public void visitUnary(Unary that, ScopeStack ctx) {
+        that.operand.accept(this, ctx);
+    }
+
+    @Override
+    public void visitBinary(Binary that, ScopeStack ctx) {
+        that.lhs.accept(this, ctx);
+        that.rhs.accept(this, ctx);
+    }
+
+    @Override
+    public void visitNewArray(NewArray that, ScopeStack ctx) {
+        that.length.accept(this, ctx);
+    }
+
+    @Override
+    public void visitClassTest(ClassTest that, ScopeStack ctx) {
+        that.obj.accept(this, ctx);
+    }
+
+    @Override
+    public void visitClassCast(ClassCast that, ScopeStack ctx) {
+        that.obj.accept(this, ctx);
     }
 
 }
