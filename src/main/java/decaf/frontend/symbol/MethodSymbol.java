@@ -72,5 +72,10 @@ public final class MethodSymbol extends Symbol {
         return modifiers.isStatic();
     }
 
+    @Override
+    public String getSymbolType() {
+        return " MethodSymbol ";
+    }
+
     private boolean main = false;
 }

@@ -101,5 +101,10 @@ public final class ClassSymbol extends Symbol {
                 staticMethods, isMainClass());
     }
 
+    @Override
+    public String getSymbolType() {
+        return " ClassSymbol ";
+    }
+
     private boolean main;
 }

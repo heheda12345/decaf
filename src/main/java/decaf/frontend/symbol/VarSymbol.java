@@ -66,6 +66,11 @@ public final class VarSymbol extends Symbol {
         return ((ClassScope) definedIn).getOwner();
     }
 
+    @Override
+    public String getSymbolType() {
+        return " VarSymbol ";
+    }
+
     /**
      * Temp, reserved for {@link decaf.frontend.tacgen.TacGen}.
      */

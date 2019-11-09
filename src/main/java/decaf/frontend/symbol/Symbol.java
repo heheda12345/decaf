@@ -83,4 +83,6 @@ public abstract class Symbol implements Comparable<Symbol> {
     public int compareTo(Symbol that) {
         return this.pos.compareTo(that.pos);
     }
+
+    public abstract String getSymbolType();
 }

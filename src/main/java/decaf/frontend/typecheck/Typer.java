@@ -476,13 +476,13 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         System.out.println(expr.pos + "visitCall" + expr);
         expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
         expr.caller.accept(this, ctx);
-        System.out.println("visitCall, after" + expr.symbol.name + expr.symbol.type);
         if (expr.caller.symbol.type.noError()) {
-            System.out.println(expr.pos+"visitCall caller" + expr.caller.symbol + "|" + expr.caller.symbol.type);
-            if (!(expr.caller.symbol.isMethodSymbol() || expr.caller.symbol.isLambdaSymbol())) {
+            if (!expr.caller.symbol.type.isFuncType()) {
                 issue(new NotCallableError(expr.pos, expr.caller.symbol.type.toString()));
                 return;
             }
+
+            String callerName = expr.name.isPresent() ? "function '"+expr.name.get()+"'" : "lambda expression";
             
             if (expr.caller instanceof VarSel) {
                 VarSel caller = (VarSel) expr.caller;
@@ -493,7 +493,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     allowClassNameVar = false;
                     var rt = receiver.symbol.type;
     
-                    if (rt.isArrayType() && expr.name.equals("length")) { // Special case: array.length()
+                    if (rt.isArrayType() && expr.name.isPresent() && expr.name.get().equals("length")) { // Special case: array.length()
                         if (!expr.args.isEmpty()) {
                             issue(new BadLengthArgError(expr.pos, expr.args.size()));
                         }
@@ -512,7 +512,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             FunType et = (FunType) expr.caller.symbol.type;
             // check signature compatibility
             if (et.arity() != args.size()) {
-                issue(new BadArgCountError(expr.pos, expr.name.get(), et.arity(), args.size()));
+                issue(new BadArgCountError(expr.pos, callerName, et.arity(), args.size()));
             }
             var iter1 = et.argTypes.iterator();
             var iter2 = expr.args.iterator();
@@ -533,10 +533,14 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         ctx.open(lambda.scope);
         if (lambda.ty == LambdaType.EXPR) {
             ctx.open(lambda.scope.nestedLocalScope());
-        }
-        lambda.ret.accept(this, ctx);
-        if (lambda.ty == LambdaType.EXPR) {
+            Tree.Expr expr = (Tree.Expr) lambda.ret;
+            lambda.ret.accept(this, ctx);
+            lambda.symbol = new VarSymbol("NonameExprLambda", new FunType(expr.symbol.type, ((FunType)lambda.symbol.type).argTypes), lambda.pos);
             ctx.close();
+        } else {
+            Tree.Block blk = (Tree.Block) lambda.ret;
+            lambda.ret.accept(this, ctx);
+            lambda.symbol = new VarSymbol("NonameBlockLambda", new FunType(blk.returnType, ((FunType)lambda.symbol.type).argTypes), lambda.pos);
         }
         ctx.close();
     }
@@ -595,7 +599,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                 issue(new BadVarTypeError(stmt.pos, stmt.name));
         }
 
-        if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
+        if (lt.noError() && !rt.subtypeOf(lt)) {
             issue(new IncompatBinOpError(stmt.assignPos, lt.toString(), "=", rt.toString()));
         }
     }

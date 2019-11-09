@@ -57,5 +57,10 @@ public final class LambdaSymbol extends Symbol {
         return ((ClassScope) definedIn).getOwner();
     }
 
+    @Override
+    public String getSymbolType() {
+        return " LambdaSymbol ";
+    }
+
     public Temp temp;
 }
