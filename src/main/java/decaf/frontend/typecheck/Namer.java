@@ -208,7 +208,12 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitVarDef(Tree.VarDef varDef, ScopeStack ctx) {
-        var earlier = ctx.findConflict(varDef.name);
+        var earlier = ctx.currentScope().find(varDef.name);
+        if (earlier.isPresent()) {
+            issue(new DeclConflictError(varDef.pos, varDef.name, earlier.get().pos));
+            return;
+        }
+        earlier = ctx.findConflict(varDef.name);
         if (earlier.isPresent()) {
             if (earlier.get().isVarSymbol()) {
                 issue(new OverridingVarError(varDef.pos, varDef.name));
@@ -233,7 +238,12 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitMethodDef(Tree.MethodDef method, ScopeStack ctx) {
-        var earlier = ctx.findConflict(method.name);
+        var earlier = ctx.currentScope().find(method.name);
+        if (earlier.isPresent()) {
+            issue(new DeclConflictError(method.pos, method.name, earlier.get().pos));
+            return;
+        }
+        earlier = ctx.findConflict(method.name);
         if (earlier.isPresent()) {
             if (earlier.get().isMethodSymbol()) { // may be overriden
                 var suspect = (MethodSymbol) earlier.get();
