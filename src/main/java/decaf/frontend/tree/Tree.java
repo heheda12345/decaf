@@ -5,6 +5,7 @@ import decaf.frontend.scope.LambdaScope;
 import decaf.frontend.scope.LocalScope;
 import decaf.frontend.scope.Scope;
 import decaf.frontend.symbol.ClassSymbol;
+import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
@@ -529,6 +530,7 @@ public abstract class Tree {
          * For type check: does this return a value?
          */
         public boolean returns = false;
+        public Type returnType;
 
         public boolean isBlock() {
             return false;
@@ -976,13 +978,17 @@ public abstract class Tree {
      * Expression.
      */
     public abstract static class Expr extends TreeNode {
-        // For type check
-        public Type type;
+        // type is in symbol
         // For tac gen
         public Temp val;
+        public Optional<String> name;
+        public Symbol symbol;
+        public boolean isArrayLength;
 
         public Expr(Kind kind, String displayName, Pos pos) {
             super(kind, displayName, pos);
+            name = Optional.empty();
+            isArrayLength = false;
         }
     }
 
@@ -1125,17 +1131,14 @@ public abstract class Tree {
         // Tree element
         public Optional<Expr> receiver;
         public Id variable;
-        // For convenience
-        public String name;
-        // For type check
-        public Symbol symbol;
         public boolean isClassName = false;
+    
 
         public VarSel(Optional<Expr> receiver, Id variable, Pos pos) {
             super(Kind.VAR_SEL, "VarSel", pos);
             this.receiver = receiver;
             this.variable = variable;
-            this.name = variable.name;
+            this.name = Optional.ofNullable(variable.name);
         }
 
         public VarSel(Expr receiver, Id variable, Pos pos) {
@@ -1421,8 +1424,6 @@ public abstract class Tree {
     public static class NewClass extends Expr {
         // Tree elements
         public Id clazz;
-        // For type check
-        public ClassSymbol symbol;
 
         public NewClass(Id clazz, Pos pos) {
             super(Kind.NEW_CLASS, "NewClass", pos);
@@ -1496,8 +1497,6 @@ public abstract class Tree {
         // Tree elements
         public Expr obj;
         public Id is;
-        // For type check
-        public ClassSymbol symbol;
 
         public ClassTest(Expr obj, Id is, Pos pos) {
             super(Kind.CLASS_TEST, "ClassTest", pos);
@@ -1536,8 +1535,6 @@ public abstract class Tree {
         // Tree elements
         public Expr obj;
         public Id to;
-        // For type check
-        public ClassSymbol symbol;
 
         public ClassCast(Expr obj, Id to, Pos pos) {
             super(Kind.CLASS_CAST, "ClassCast", pos);
@@ -1628,17 +1625,12 @@ public abstract class Tree {
         public Expr caller;
         public Optional<Expr> receiver; // SOS for compile
         public List<Expr> args;
-        // For type check
-        public MethodSymbol symbol;
-        public boolean isArrayLength = false;
-        public final String methodName;
 
         public Call(Expr caller, List<Expr> args, Pos pos) {
             super(Kind.CALL, "Call", pos);
             this.caller = caller;
             this.args = args;
-            this.methodName = caller instanceof VarSel ? ((VarSel)caller).name : "NoMethodName";
-            // System.out.println("Call: methodName " + this.methodName);
+            this.name = caller instanceof VarSel ? caller.name : Optional.empty();
         }
 
         // public Call(Optional<Expr> receiver, Id method, List<Expr> args, Pos pos) {

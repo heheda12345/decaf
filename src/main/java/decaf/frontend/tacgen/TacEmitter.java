@@ -142,16 +142,17 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitPrint(Tree.Print stmt, FuncVisitor mv) {
-        for (var expr : stmt.exprs) {
-            expr.accept(this, mv);
-            if (expr.type.eq(BuiltInType.INT)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_INT, expr.val);
-            } else if (expr.type.eq(BuiltInType.BOOL)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_BOOL, expr.val);
-            } else if (expr.type.eq(BuiltInType.STRING)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, expr.val);
-            }
-        }
+        // SOS TYPE
+        // for (var expr : stmt.exprs) {
+        //     expr.accept(this, mv);
+        //     if (expr.type.eq(BuiltInType.INT)) {
+        //         mv.visitIntrinsicCall(Intrinsic.PRINT_INT, expr.val);
+        //     } else if (expr.type.eq(BuiltInType.BOOL)) {
+        //         mv.visitIntrinsicCall(Intrinsic.PRINT_BOOL, expr.val);
+        //     } else if (expr.type.eq(BuiltInType.STRING)) {
+        //         mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, expr.val);
+        //     }
+        // }
     }
 
     // Expressions
@@ -206,35 +207,36 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitBinary(Tree.Binary expr, FuncVisitor mv) {
-        if ((expr.op.equals(Tree.BinaryOp.EQ) || expr.op.equals(Tree.BinaryOp.NE)) &&
-                expr.lhs.type.eq(BuiltInType.STRING)) { // string eq/ne
-            expr.lhs.accept(this, mv);
-            expr.rhs.accept(this, mv);
-            expr.val = mv.visitIntrinsicCall(Intrinsic.STRING_EQUAL, true, expr.lhs.val, expr.rhs.val);
-            if (expr.op.equals(Tree.BinaryOp.NE)) {
-                mv.visitUnarySelf(TacInstr.Unary.Op.LNOT, expr.val);
-            }
-            return;
-        }
+        // SOS
+        // if ((expr.op.equals(Tree.BinaryOp.EQ) || expr.op.equals(Tree.BinaryOp.NE)) &&
+        //         expr.lhs.type.eq(BuiltInType.STRING)) { // string eq/ne
+        //     expr.lhs.accept(this, mv);
+        //     expr.rhs.accept(this, mv);
+        //     expr.val = mv.visitIntrinsicCall(Intrinsic.STRING_EQUAL, true, expr.lhs.val, expr.rhs.val);
+        //     if (expr.op.equals(Tree.BinaryOp.NE)) {
+        //         mv.visitUnarySelf(TacInstr.Unary.Op.LNOT, expr.val);
+        //     }
+        //     return;
+        // }
 
-        var op = switch (expr.op) {
-            case ADD -> TacInstr.Binary.Op.ADD;
-            case SUB -> TacInstr.Binary.Op.SUB;
-            case MUL -> TacInstr.Binary.Op.MUL;
-            case DIV -> TacInstr.Binary.Op.DIV;
-            case MOD -> TacInstr.Binary.Op.MOD;
-            case EQ -> TacInstr.Binary.Op.EQU;
-            case NE -> TacInstr.Binary.Op.NEQ;
-            case LT -> TacInstr.Binary.Op.LES;
-            case LE -> TacInstr.Binary.Op.LEQ;
-            case GT -> TacInstr.Binary.Op.GTR;
-            case GE -> TacInstr.Binary.Op.GEQ;
-            case AND -> TacInstr.Binary.Op.LAND;
-            case OR -> TacInstr.Binary.Op.LOR;
-        };
-        expr.lhs.accept(this, mv);
-        expr.rhs.accept(this, mv);
-        expr.val = mv.visitBinary(op, expr.lhs.val, expr.rhs.val);
+        // var op = switch (expr.op) {
+        //     case ADD -> TacInstr.Binary.Op.ADD;
+        //     case SUB -> TacInstr.Binary.Op.SUB;
+        //     case MUL -> TacInstr.Binary.Op.MUL;
+        //     case DIV -> TacInstr.Binary.Op.DIV;
+        //     case MOD -> TacInstr.Binary.Op.MOD;
+        //     case EQ -> TacInstr.Binary.Op.EQU;
+        //     case NE -> TacInstr.Binary.Op.NEQ;
+        //     case LT -> TacInstr.Binary.Op.LES;
+        //     case LE -> TacInstr.Binary.Op.LEQ;
+        //     case GT -> TacInstr.Binary.Op.GTR;
+        //     case GE -> TacInstr.Binary.Op.GEQ;
+        //     case AND -> TacInstr.Binary.Op.LAND;
+        //     case OR -> TacInstr.Binary.Op.LOR;
+        // };
+        // expr.lhs.accept(this, mv);
+        // expr.rhs.accept(this, mv);
+        // expr.val = mv.visitBinary(op, expr.lhs.val, expr.rhs.val);
     }
 
     @Override
@@ -275,86 +277,89 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitCall(Tree.Call expr, FuncVisitor mv) {
-        if (expr.isArrayLength) { // special case for array.length()
-            var array = expr.receiver.get();
-            array.accept(this, mv);
-            expr.val = mv.visitLoadFrom(array.val, -4);
-            return;
-        }
+        // SOS
+        // if (expr.isArrayLength) { // special case for array.length()
+        //     var array = expr.receiver.get();
+        //     array.accept(this, mv);
+        //     expr.val = mv.visitLoadFrom(array.val, -4);
+        //     return;
+        // }
 
-        expr.args.forEach(arg -> arg.accept(this, mv));
-        var temps = new ArrayList<Temp>();
-        expr.args.forEach(arg -> temps.add(arg.val));
+        // expr.args.forEach(arg -> arg.accept(this, mv));
+        // var temps = new ArrayList<Temp>();
+        // expr.args.forEach(arg -> temps.add(arg.val));
 
-        if (expr.symbol.isStatic()) {
-            if (expr.symbol.type.returnType.isVoidType()) {
-                mv.visitStaticCall(expr.symbol.owner.name, expr.symbol.name, temps);
-            } else {
-                expr.val = mv.visitStaticCall(expr.symbol.owner.name, expr.symbol.name, temps, true);
-            }
-        } else {
-            var object = expr.receiver.get();
-            object.accept(this, mv);
-            if (expr.symbol.type.returnType.isVoidType()) {
-                mv.visitMemberCall(object.val, expr.symbol.owner.name, expr.symbol.name, temps);
-            } else {
-                expr.val = mv.visitMemberCall(object.val, expr.symbol.owner.name, expr.symbol.name, temps, true);
-            }
-        }
+        // if (expr.symbol.isStatic()) {
+        //     if (expr.symbol.type.returnType.isVoidType()) {
+        //         mv.visitStaticCall(expr.symbol.owner.name, expr.symbol.name, temps);
+        //     } else {
+        //         expr.val = mv.visitStaticCall(expr.symbol.owner.name, expr.symbol.name, temps, true);
+        //     }
+        // } else {
+        //     var object = expr.receiver.get();
+        //     object.accept(this, mv);
+        //     if (expr.symbol.type.returnType.isVoidType()) {
+        //         mv.visitMemberCall(object.val, expr.symbol.owner.name, expr.symbol.name, temps);
+        //     } else {
+        //         expr.val = mv.visitMemberCall(object.val, expr.symbol.owner.name, expr.symbol.name, temps, true);
+        //     }
+        // }
     }
 
     @Override
     default void visitClassTest(Tree.ClassTest expr, FuncVisitor mv) {
         // Accelerate: when obj.type <: class.type, then the test must be successful!
-        if (expr.obj.type.subtypeOf(expr.symbol.type)) {
-            expr.val = mv.visitLoad(1);
-            return;
-        }
+        // SOS Symbol type
+        // if (expr.obj.type.subtypeOf(expr.symbol.type)) {
+        //     expr.val = mv.visitLoad(1);
+        //     return;
+        // }
 
-        expr.obj.accept(this, mv);
-        expr.val = emitClassTest(expr.obj.val, expr.symbol.name, mv);
+        // expr.obj.accept(this, mv);
+        // expr.val = emitClassTest(expr.obj.val, expr.symbol.name, mv);
     }
 
     @Override
     default void visitClassCast(Tree.ClassCast expr, FuncVisitor mv) {
-        expr.obj.accept(this, mv);
-        expr.val = expr.obj.val;
+        // SOS
+        // expr.obj.accept(this, mv);
+        // expr.val = expr.obj.val;
 
-        // Accelerate: when obj.type <: class.type, then the test must success!
-        if (expr.obj.type.subtypeOf(expr.symbol.type)) {
-            return;
-        }
-        var result = emitClassTest(expr.obj.val, expr.symbol.name, mv);
+        // // Accelerate: when obj.type <: class.type, then the test must success!
+        // if (expr.obj.type.subtypeOf(expr.symbol.type)) {
+        //     return;
+        // }
+        // var result = emitClassTest(expr.obj.val, expr.symbol.name, mv);
 
-        /* Pseudo code:
-         * <pre>
-         *     if (result != 0) branch exit  // cast success
-         *     print "Decaf runtime error: " // RuntimeError.CLASS_CAST_ERROR1
-         *     vtbl1 = *obj                  // vtable of obj
-         *     fromClass = *(vtbl1 + 4)      // name of obj's class
-         *     print fromClass
-         *     print " cannot be cast to "   // RuntimeError.CLASS_CAST_ERROR2
-         *     vtbl2 = load vtbl of the target class
-         *     toClass = *(vtbl2 + 4)        // name of target class
-         *     print toClass
-         *     print "\n"                    // RuntimeError.CLASS_CAST_ERROR3
-         *     halt
-         * exit:
-         * </pre>
-         */
-        var exit = mv.freshLabel();
-        mv.visitBranch(TacInstr.CondBranch.Op.BNEZ, result, exit);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR1);
-        var vtbl1 = mv.visitLoadFrom(expr.obj.val);
-        var fromClass = mv.visitLoadFrom(vtbl1, 4);
-        mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, fromClass);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR2);
-        var vtbl2 = mv.visitLoadVTable(expr.symbol.name);
-        var toClass = mv.visitLoadFrom(vtbl2, 4);
-        mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, toClass);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR3);
-        mv.visitIntrinsicCall(Intrinsic.HALT);
-        mv.visitLabel(exit);
+        // /* Pseudo code:
+        //  * <pre>
+        //  *     if (result != 0) branch exit  // cast success
+        //  *     print "Decaf runtime error: " // RuntimeError.CLASS_CAST_ERROR1
+        //  *     vtbl1 = *obj                  // vtable of obj
+        //  *     fromClass = *(vtbl1 + 4)      // name of obj's class
+        //  *     print fromClass
+        //  *     print " cannot be cast to "   // RuntimeError.CLASS_CAST_ERROR2
+        //  *     vtbl2 = load vtbl of the target class
+        //  *     toClass = *(vtbl2 + 4)        // name of target class
+        //  *     print toClass
+        //  *     print "\n"                    // RuntimeError.CLASS_CAST_ERROR3
+        //  *     halt
+        //  * exit:
+        //  * </pre>
+        //  */
+        // var exit = mv.freshLabel();
+        // mv.visitBranch(TacInstr.CondBranch.Op.BNEZ, result, exit);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR1);
+        // var vtbl1 = mv.visitLoadFrom(expr.obj.val);
+        // var fromClass = mv.visitLoadFrom(vtbl1, 4);
+        // mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, fromClass);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR2);
+        // var vtbl2 = mv.visitLoadVTable(expr.symbol.name);
+        // var toClass = mv.visitLoadFrom(vtbl2, 4);
+        // mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, toClass);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR3);
+        // mv.visitIntrinsicCall(Intrinsic.HALT);
+        // mv.visitLabel(exit);
     }
 
     /**

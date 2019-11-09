@@ -10,6 +10,8 @@ import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Tree.MethodDef;
+import decaf.frontend.tree.Tree.TLambda;
+import decaf.frontend.tree.Tree.TVoid;
 import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
@@ -281,13 +283,11 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
-        // System.out.println("VisitLambda begin");
         var ls = new LambdaScope();
         typeLambda(lambda, ctx, ls);
-        // System.out.println("visitLambda middle: " + lambda.type);
-        if (lambda.type.noError()) {
-            assert lambda.type instanceof FunType;
-            var symbol = new LambdaSymbol(lambda.name, (FunType) lambda.type, ls, lambda.pos);
+        if (lambda.symbol.type.noError()) {
+            assert lambda.symbol.type instanceof FunType;
+            var symbol = new LambdaSymbol(lambda.name, (FunType) lambda.symbol.type, ls, lambda.pos);
             ctx.declare(symbol);
             ctx.open(ls);
             if (lambda.ty == LambdaType.EXPR) {
@@ -300,7 +300,6 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             }
             ctx.close();
         }
-        // System.out.println("visitLambda finish: " + lambda.type);
     }
 
     private void typeLambda(Tree.Lambda lambda, ScopeStack ctx, LambdaScope ls) {
@@ -310,12 +309,24 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             param.accept(this, ctx);
             argTypes.add(param.typeLit.type);
         }
-        lambda.type = new FunType(BuiltInType.VAR, argTypes);
+        lambda.symbol = new LambdaSymbol("nonameLambdaSymbol", new FunType(BuiltInType.VAR, argTypes), ls, lambda.pos);
         lambda.scope = ls;
         ctx.close();
     }
 
-
+    @Override
+    public void visitTLambda(TLambda typeLambda, ScopeStack ctx) {
+        typeLambda.retType.accept(this, ctx);
+        var argTypes = new ArrayList<Type>();
+        for (var argType: typeLambda.argTypes) {
+            argType.accept(this, ctx);
+            if (argType instanceof TVoid) {
+                issue(new FunctionVoidArgError(argType.pos));
+            }
+            argTypes.add(argType.type);
+        }
+        typeLambda.type = new FunType(typeLambda.retType.type, argTypes);
+    }
 
     @Override
     public void visitBlock(Tree.Block block, ScopeStack ctx) {

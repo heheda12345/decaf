@@ -19,6 +19,7 @@ import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.ArrayType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
+import decaf.frontend.type.FunType;
 import decaf.frontend.type.Type;
 import decaf.lowlevel.log.IndentPrinter;
 import decaf.printing.PrettyScope;
@@ -101,8 +102,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitAssign(Tree.Assign stmt, ScopeStack ctx) {
         stmt.lhs.accept(this, ctx);
         stmt.rhs.accept(this, ctx);
-        var lt = stmt.lhs.type;
-        var rt = stmt.rhs.type;
+        var lt = stmt.lhs.symbol.type;
+        var rt = stmt.rhs.symbol.type;
 
         if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
             issue(new IncompatBinOpError(stmt.pos, lt.toString(), "=", rt.toString()));
@@ -157,7 +158,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitReturn(Tree.Return stmt, ScopeStack ctx) {
         var expected = ctx.currentMethod().type.returnType;
         stmt.expr.ifPresent(e -> e.accept(this, ctx));
-        var actual = stmt.expr.map(e -> e.type).orElse(BuiltInType.VOID);
+        var actual = stmt.expr.map(e -> e.symbol.type).orElse(BuiltInType.VOID);
         if (actual.noError() && !actual.subtypeOf(expected)) {
             issue(new BadReturnTypeError(stmt.pos, expected.toString(), actual.toString()));
         }
@@ -170,15 +171,15 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         for (var expr : stmt.exprs) {
             expr.accept(this, ctx);
             i++;
-            if (expr.type.noError() && !expr.type.isBaseType()) {
-                issue(new BadPrintArgError(expr.pos, Integer.toString(i), expr.type.toString()));
+            if (expr.symbol.type.noError() && !expr.symbol.type.isBaseType()) {
+                issue(new BadPrintArgError(expr.pos, Integer.toString(i), expr.symbol.type.toString()));
             }
         }
     }
 
     private void checkTestExpr(Tree.Expr expr, ScopeStack ctx) {
         expr.accept(this, ctx);
-        if (expr.type.noError() && !expr.type.eq(BuiltInType.BOOL)) {
+        if (expr.symbol.type.noError() && !expr.symbol.type.eq(BuiltInType.BOOL)) {
             issue(new BadTestExpr(expr.pos));
         }
     }
@@ -187,38 +188,38 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitIntLit(Tree.IntLit that, ScopeStack ctx) {
-        that.type = BuiltInType.INT;
+        that.symbol = new VarSymbol("NONAMEINTLIT", BuiltInType.INT, that.pos);
     }
 
     @Override
     public void visitBoolLit(Tree.BoolLit that, ScopeStack ctx) {
-        that.type = BuiltInType.BOOL;
+        that.symbol = new VarSymbol("NONAMEBOOLLIT", BuiltInType.BOOL, that.pos);
     }
 
     @Override
     public void visitStringLit(Tree.StringLit that, ScopeStack ctx) {
-        that.type = BuiltInType.STRING;
+        that.symbol = new VarSymbol("NONAMESTRINGLIT", BuiltInType.STRING, that.pos);
     }
 
     @Override
     public void visitNullLit(Tree.NullLit that, ScopeStack ctx) {
-        that.type = BuiltInType.NULL;
+        that.symbol = new VarSymbol("NONAMENULLLIT", BuiltInType.NULL, that.pos);
     }
 
     @Override
     public void visitReadInt(Tree.ReadInt readInt, ScopeStack ctx) {
-        readInt.type = BuiltInType.INT;
+        readInt.symbol = new VarSymbol("NONAMEREADINT", BuiltInType.INT, readInt.pos);
     }
 
     @Override
     public void visitReadLine(Tree.ReadLine readStringExpr, ScopeStack ctx) {
-        readStringExpr.type = BuiltInType.STRING;
+        readStringExpr.symbol = new VarSymbol("NONAMEREADLINE", BuiltInType.STRING, readStringExpr.pos);
     }
 
     @Override
     public void visitUnary(Tree.Unary expr, ScopeStack ctx) {
         expr.operand.accept(this, ctx);
-        var t = expr.operand.type;
+        var t = expr.operand.symbol.type;
         if (t.noError() && !compatible(expr.op, t)) {
             // Only report this error when the operand has no error, to avoid nested errors flushing.
             issue(new IncompatUnOpError(expr.pos, Tree.opStr(expr.op), t.toString()));
@@ -228,7 +229,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         // Let's say the operator is `-`, then one possibly wants an integer as the operand.
         // Once he/she fixes the operand, according to our type inference rule, the whole unary expression
         // must have type int! Thus, we simply _assume_ it has type int, rather than `NoType`.
-        expr.type = resultTypeOf(expr.op);
+        expr.symbol = new VarSymbol("NONAMEUNARY", resultTypeOf(expr.op), expr.pos);
     }
 
     public boolean compatible(Tree.UnaryOp op, Type operand) {
@@ -249,12 +250,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitBinary(Tree.Binary expr, ScopeStack ctx) {
         expr.lhs.accept(this, ctx);
         expr.rhs.accept(this, ctx);
-        var t1 = expr.lhs.type;
-        var t2 = expr.rhs.type;
+        var t1 = expr.lhs.symbol.type;
+        var t2 = expr.rhs.symbol.type;
         if (t1.noError() && t2.noError() && !compatible(expr.op, t1, t2)) {
             issue(new IncompatBinOpError(expr.pos, t1.toString(), Tree.opStr(expr.op), t2.toString()));
         }
-        expr.type = resultTypeOf(expr.op);
+        expr.symbol = new VarSymbol("NONAMEBINARY", resultTypeOf(expr.op), expr.pos);
     }
 
     public boolean compatible(Tree.BinaryOp op, Type lhs, Type rhs) {
@@ -290,13 +291,13 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         expr.elemType.accept(this, ctx);
         expr.length.accept(this, ctx);
         var et = expr.elemType.type;
-        var lt = expr.length.type;
+        var lt = expr.length.symbol.type;
 
         if (et.isVoidType()) {
             issue(new BadArrElementError(expr.elemType.pos));
-            expr.type = BuiltInType.ERROR;
+            expr.symbol = new VarSymbol("NONAMENEWARRAY", BuiltInType.ERROR, expr.pos);
         } else {
-            expr.type = new ArrayType(et);
+            expr.symbol = new VarSymbol("NONAMENEWARRAY", new ArrayType(et), expr.pos);
         }
 
         if (lt.noError() && !lt.eq(BuiltInType.INT)) {
@@ -309,12 +310,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         var clazz = ctx.lookupClass(expr.clazz.name);
         if (clazz.isPresent()) {
             expr.symbol = clazz.get();
-            expr.type = expr.symbol.type;
             if (clazz.get().isAbstract)
                 issue(new UseAbstractClassError(expr.pos, expr.clazz.name));
         } else {
             issue(new ClassNotFoundError(expr.pos, expr.clazz.name));
-            expr.type = BuiltInType.ERROR;
+            expr.symbol = new VarSymbol("NONAMENEWCLASS", BuiltInType.ERROR, expr.pos);
+            // use var symbol as it is easy
         }
     }
 
@@ -323,146 +324,132 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         if (ctx.currentMethod().isStatic()) {
             issue(new ThisInStaticFuncError(expr.pos));
         }
-        expr.type = ctx.currentClass().type;
+        expr.symbol = ctx.currentClass();
     }
 
     private boolean allowClassNameVar = false;
 
     @Override
     public void visitVarSel(Tree.VarSel expr, ScopeStack ctx) {
-        Type rt;
-        // System.out.println(expr.pos + "visit varsel " + expr);
+        System.out.println(expr.pos + "visit varsel " + expr);
+        assert expr.name.isPresent();
         if (expr.receiver.isEmpty()) {
             // Variable, which should be complicated since a legal variable could refer to a local var,
             // a visible member var, and a class name.
             // System.out.println("no receiver, search " + expr.name);
-            var symbol = ctx.lookupBefore(expr.name, localVarDefPos.orElse(expr.pos));
+            expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
+            var symbol = ctx.lookupBefore(expr.name.get(), localVarDefPos.orElse(expr.pos));
             if (symbol.isPresent()) {
-                // System.out.println("symbol present " + symbol.get());
+                System.out.println("symbol present " + symbol.get());
                 if (symbol.get().isVarSymbol()) {
                     var var = (VarSymbol) symbol.get();
-                    expr.symbol = var;
-                    expr.type = var.type;
                     if (var.isMemberVar()) {
                         if (ctx.currentMethod().isStatic()) {
-                            issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, expr.name));
-                        } else {
-                            expr.setThis();
+                            issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, expr.name.get()));
                         }
                     }
+                    expr.symbol = symbol.get();
                     return;
                 }
 
-                if (symbol.get().isClassSymbol() && allowClassNameVar) { // special case: a class name
-                    var clazz = (ClassSymbol) symbol.get();
-                    expr.type = clazz.type;
-                    expr.isClassName = true;
-                    return;
+                if (symbol.get().isClassSymbol()) {
+                    if (allowClassNameVar) { // special case: a class name
+                        expr.isClassName = true;
+                        expr.symbol = symbol.get();
+                        return;
+                    } // else undeclvarerror
                 }
 
                 if (symbol.get().isMethodSymbol()) { // from visitCall
-                    expr.setThis();
-                    rt = ctx.currentClass().type;
-                    assert rt.isClassType(); // only isClassType branch of visitCall
-                    typeCallInSel(expr, true, ((ClassType) rt).name, ctx, false);
+                    System.out.println("typer: find method symbol " + symbol.get().name + symbol.get().type);
+                    var method = (MethodSymbol)symbol.get();
+                    if (ctx.currentMethod().isStatic() && !method.isStatic()) {
+                        issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, method.name));
+                        return;
+                    }
+                    expr.symbol = symbol.get();
                     return;
                 }
 
                 if (symbol.get().isLambdaSymbol()) {
                     // maybe should check as method?
-                    System.out.println("typer: find lambda symbol " + expr.name);
+                    System.out.println("typer: find lambda symbol " + symbol.get().name + symbol.get().type);
+                    expr.symbol = symbol.get();
                     return;
                     // expr.accept(this, ctx);
                 }   
-            } else {
-                // System.out.println("symbol not present");
-                expr.type = BuiltInType.ERROR;
-                issue(new UndeclVarError(expr.pos, expr.name));
-                return;
             }
+            // System.out.println("symbol not present");
+            issue(new UndeclVarError(expr.pos, expr.name.get()));
+            return;
         } else {
             // has receiver
             var receiver = expr.receiver.get();
-            // System.out.println("has receiver " + receiver);
             allowClassNameVar = true;
             receiver.accept(this, ctx);
             allowClassNameVar = false;
-            rt = receiver.type;
-            expr.type = BuiltInType.ERROR;
-
-            if (receiver instanceof Tree.VarSel) {
-                var v1 = (Tree.VarSel) receiver;
-                if (v1.isClassName) {
-                    // special case like MyClass.foo: report error cannot access field 'foo' from 'class : MyClass'
-                    issue(new NotClassFieldError(expr.pos, expr.name, ctx.getClass(v1.name).type.toString()));
+            System.out.println("has receiver " + receiver.symbol.type + receiver.symbol.name);
+            var rt = receiver.symbol.type;
+            expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
+            
+            if (rt.noError()) {
+                if (!rt.isClassType()) {
+                    issue(new NotClassFieldError(expr.pos, expr.name.get(), rt.toString()));
                     return;
                 }
-            }
-            if (rt.noError() && rt.isClassType() &&
-                !(receiver instanceof NewClass || receiver instanceof NewArray)) {
-                issue(new NotClassFieldError(expr.pos, expr.name, rt.toString()));
-                return;
-            }
-            var ct = (ClassType) rt;
-            // System.out.println("search name " + ct.name);
-            var field = ctx.getClass(ct.name).scope.lookup(expr.name);
-            if (field.isPresent()) {
+                var ct = (ClassType) rt;
+                System.out.println("search name " + ct.name + " " + expr.name.get());
+                var field = ctx.getClass(ct.name).scope.lookup(expr.name.get());
+                if (!field.isPresent()) {
+                    issue(new FieldNotFoundError(expr.pos, expr.name.get(), ct.toString()));
+                    return;
+                }
                 var var = field.get();
-                if (var.isVarSymbol()) {
-                    if (((VarSymbol)var).isMemberVar()) {
-                        expr.symbol = var;
-                        expr.type = var.type;
-                        if (!ctx.currentClass().type.subtypeOf(((VarSymbol)var).getOwner().type)) {
-                            // member vars are protected
-                            issue(new FieldNotAccessError(expr.pos, expr.name, ct.toString()));
+                System.out.println("find field " + var.type + var.name);
+                if (receiver instanceof Tree.VarSel) {
+                    var v1 = (Tree.VarSel) receiver;
+                    if (v1.isClassName) {
+                        // special case like MyClass.foo: report error cannot access field 'foo' from 'class : MyClass'
+                        if (!(var.isMethodSymbol() &&
+                            ((MethodSymbol)var).isStatic())) {
+                            issue(new NotClassFieldError(expr.pos, expr.name.get(), v1.name.get()));
+                            return;
                         }
                     }
                 }
+                if (var.isVarSymbol()) {
+                    if (((VarSymbol)var).isMemberVar()) {
+                        if (!ctx.currentClass().type.subtypeOf(((VarSymbol)var).getOwner().type)) {
+                            // member vars are protected
+                            issue(new FieldNotAccessError(expr.pos, expr.name.get(), ct.toString()));
+                            return;
+                        }
+                    }
+                    expr.symbol = var;
+                    return;
+                }
 
                 if (var.isMethodSymbol()) {
-                    assert(rt.isClassType() || rt.isArrayType());
-                    if (rt.isClassType()) {
-                        typeCallInSel(expr, false, ((ClassType) rt).name, ctx, false);
-                    }
+                    System.out.println("typer: find method symbol " + var.name + var.type);
+                    expr.symbol = var;
+                    return;
                 }
 
                 if (var.isLambdaSymbol()) {
                     // maybe should check as method?
-                    System.out.println("typer: find lambda symbol " + expr.name);
-                    return;
-                    // expr.accept(this, ctx);
-                }   
-            } else if (field.isEmpty()) {
-                issue(new FieldNotFoundError(expr.pos, expr.name, ct.toString()));
-            } else {
-                issue(new NotClassFieldError(expr.pos, expr.name, ct.toString()));
-            }
-        }
-    }
-
-    private void typeCallInSel(Tree.VarSel call, boolean thisClass, String className, ScopeStack ctx, boolean requireStatic) {
-        var clazz = thisClass ? ctx.currentClass() : ctx.getClass(className);
-        var symbol = clazz.scope.lookup(call.name);
-        if (symbol.isPresent()) {
-            if (symbol.get().isMethodSymbol()) {
-                var method = (MethodSymbol) symbol.get();
-                call.symbol = method;
-                call.type = method.type.returnType;
-                if (requireStatic && !method.isStatic()) {
-                    issue(new NotClassFieldError(call.pos, call.name , clazz.type.toString()));
+                    System.out.println("typer: find lambda symbol " + var.name + var.type);
+                    expr.symbol = var;
                     return;
                 }
 
-                // Cannot call this's member methods in a static method
-                if (thisClass && ctx.currentMethod().isStatic() && !method.isStatic()) {
-                    issue(new RefNonStaticError(call.pos, ctx.currentMethod().name, method.name));
+                if (var.isClassSymbol()) {
+                    System.out.println("typer: find class symbol " + var.name + var.type);
+                    expr.symbol = var;
+                    return;
                 }
-                // do arg check in call
-            } else {
-                issue(new NotClassMethodError(call.pos, call.name, clazz.type.toString()));
-            }
-        } else {
-            issue(new FieldNotFoundError(call.pos, call.name, clazz.type.toString()));
+                
+                issue(new NotClassFieldError(expr.pos, expr.name.get(), ct.toString()));
+            } 
         }
     }
 
@@ -470,16 +457,15 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitIndexSel(Tree.IndexSel expr, ScopeStack ctx) {
         expr.array.accept(this, ctx);
         expr.index.accept(this, ctx);
-        var at = expr.array.type;
-        var it = expr.index.type;
+        var at = expr.array.symbol.type;
+        var it = expr.index.symbol.type;
 
         if (!at.isArrayType()) {
             issue(new NotArrayError(expr.array.pos));
-            expr.type = BuiltInType.ERROR;
+            expr.symbol = new VarSymbol("NONAMEINDEXSELERR", BuiltInType.ERROR, expr.pos);
             return;
         }
-
-        expr.type = ((ArrayType) at).elementType;
+        expr.symbol = new VarSymbol("NONAMEINDEXSEL", ((ArrayType) at).elementType, expr.pos);
         if (!it.eq(BuiltInType.INT)) {
             issue(new SubNotIntError(expr.pos));
         }
@@ -487,92 +473,59 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitCall(Tree.Call expr, ScopeStack ctx) {
-        // System.out.println("visitCall");
-        expr.type = BuiltInType.ERROR;
-        Type rt;
-        boolean thisClass = false;
-        if (!(expr.caller instanceof VarSel)) {
-            System.out.println("Not a Call!"); // SOS not throw error
-            return;
-        }
-        
-        VarSel caller = (VarSel) expr.caller;
-
-        if (caller.receiver.isPresent()) {
-            var receiver = caller.receiver.get();
-            allowClassNameVar = true;
-            receiver.accept(this, ctx);
-            allowClassNameVar = false;
-            rt = receiver.type;
-
-            if (receiver instanceof Tree.VarSel) {
-                var v1 = (Tree.VarSel) receiver;
-                if (v1.isClassName) {
-                    // Special case: invoking a static method, like MyClass.foo()
-                    typeCall(expr, false, v1.name, ctx, true);
-                    return;
-                }
-            }
-        } else {
-            thisClass = true;
-            expr.setThis();
-            rt = ctx.currentClass().type;
-        }
-       
-        if (rt.noError()) {
-            if (rt.isArrayType() && expr.methodName.equals("length")) { // Special case: array.length()
-                if (!expr.args.isEmpty()) {
-                    issue(new BadLengthArgError(expr.pos, expr.args.size()));
-                }
-                expr.isArrayLength = true;
-                expr.type = BuiltInType.INT;
+        System.out.println(expr.pos + "visitCall" + expr);
+        expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
+        expr.caller.accept(this, ctx);
+        System.out.println("visitCall, after" + expr.symbol.name + expr.symbol.type);
+        if (expr.caller.symbol.type.noError()) {
+            System.out.println(expr.pos+"visitCall caller" + expr.caller.symbol + "|" + expr.caller.symbol.type);
+            if (!(expr.caller.symbol.isMethodSymbol() || expr.caller.symbol.isLambdaSymbol())) {
+                issue(new NotCallableError(expr.pos, expr.caller.symbol.type.toString()));
                 return;
             }
-
-            if (rt.isClassType()) {
-                typeCall(expr, thisClass, ((ClassType) rt).name, ctx, false);
-            } else {
-                issue(new NotClassFieldError(expr.pos, expr.methodName, rt.toString()));
-            }
-        }
-    }
-
-    private void typeCall(Tree.Call call, boolean thisClass, String className, ScopeStack ctx, boolean requireStatic) {
-        var clazz = thisClass ? ctx.currentClass() : ctx.getClass(className);
-        var symbol = clazz.scope.lookup(call.methodName);
-        if (symbol.isPresent()) {
-            if (symbol.get().isMethodSymbol()) {
-                var method = (MethodSymbol) symbol.get();
-                call.symbol = method;
-                call.type = method.type.returnType;
-                // check static in varsel
-
-                // typing args
-                var args = call.args;
-                for (var arg : args) {
-                    arg.accept(this, ctx);
-                }
-
-                // check signature compatibility
-                if (method.type.arity() != args.size()) {
-                    issue(new BadArgCountError(call.pos, method.name, method.type.arity(), args.size()));
-                }
-                var iter1 = method.type.argTypes.iterator();
-                var iter2 = call.args.iterator();
-                for (int i = 1; iter1.hasNext() && iter2.hasNext(); i++) {
-                    Type t1 = iter1.next();
-                    Tree.Expr e = iter2.next();
-                    Type t2 = e.type;
-                    if (t2.noError() && !t2.subtypeOf(t1)) {
-                        issue(new BadArgTypeError(e.pos, i, t2.toString(), t1.toString()));
+            
+            if (expr.caller instanceof VarSel) {
+                VarSel caller = (VarSel) expr.caller;
+                if (caller.receiver.isPresent()) {
+                    var receiver = caller.receiver.get();
+                    allowClassNameVar = true;
+                    receiver.accept(this, ctx);
+                    allowClassNameVar = false;
+                    var rt = receiver.symbol.type;
+    
+                    if (rt.isArrayType() && expr.name.equals("length")) { // Special case: array.length()
+                        if (!expr.args.isEmpty()) {
+                            issue(new BadLengthArgError(expr.pos, expr.args.size()));
+                        }
+                        expr.isArrayLength = true;
+                        expr.symbol = new VarSymbol("NonameCallLength", BuiltInType.INT, expr.pos);
+                        return;
                     }
                 }
-            } else {
-                issue(new NotClassMethodError(call.pos, call.methodName, clazz.type.toString()));
             }
-        } else {
-            issue(new FieldNotFoundError(call.pos, call.methodName, clazz.type.toString()));
-        }
+
+            var args = expr.args;
+            for (var arg : args) {
+                arg.accept(this, ctx);
+            }
+            assert expr.caller.symbol.isLambdaSymbol() || expr.caller.symbol.isMethodSymbol();
+            FunType et = (FunType) expr.caller.symbol.type;
+            // check signature compatibility
+            if (et.arity() != args.size()) {
+                issue(new BadArgCountError(expr.pos, expr.name.get(), et.arity(), args.size()));
+            }
+            var iter1 = et.argTypes.iterator();
+            var iter2 = expr.args.iterator();
+            for (int i = 1; iter1.hasNext() && iter2.hasNext(); i++) {
+                Type t1 = iter1.next();
+                Tree.Expr e = iter2.next();
+                Type t2 = e.symbol.type;
+                if (t2.noError() && !t2.subtypeOf(t1)) {
+                    issue(new BadArgTypeError(e.pos, i, t2.toString(), t1.toString()));
+                }
+            }
+            expr.symbol = new VarSymbol("NoNameVisCallSucc", et.returnType, expr.pos);
+        } 
     }
 
     @Override
@@ -591,10 +544,10 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitClassTest(Tree.ClassTest expr, ScopeStack ctx) {
         expr.obj.accept(this, ctx);
-        expr.type = BuiltInType.BOOL;
+        expr.symbol = new VarSymbol("nonameClassTest", BuiltInType.BOOL, expr.pos);
 
-        if (!expr.obj.type.isClassType()) {
-            issue(new NotClassError(expr.obj.type.toString(), expr.pos));
+        if (!expr.obj.symbol.type.isClassType()) {
+            issue(new NotClassError(expr.obj.symbol.type.toString(), expr.pos));
         }
         var clazz = ctx.lookupClass(expr.is.name);
         if (clazz.isEmpty()) {
@@ -608,17 +561,16 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitClassCast(Tree.ClassCast expr, ScopeStack ctx) {
         expr.obj.accept(this, ctx);
 
-        if (!expr.obj.type.isClassType()) {
-            issue(new NotClassError(expr.obj.type.toString(), expr.pos));
+        if (!expr.obj.symbol.type.isClassType()) {
+            issue(new NotClassError(expr.obj.symbol.type.toString(), expr.pos));
         }
 
         var clazz = ctx.lookupClass(expr.to.name);
         if (clazz.isEmpty()) {
             issue(new ClassNotFoundError(expr.pos, expr.to.name));
-            expr.type = BuiltInType.ERROR;
+            expr.symbol = new VarSymbol("nonameClassCastErr", BuiltInType.ERROR, expr.pos);
         } else {
             expr.symbol = clazz.get();
-            expr.type = expr.symbol.type;
         }
     }
 
@@ -631,8 +583,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         localVarDefPos = Optional.empty();
         
         var lt = stmt.symbol.type;
-        var rt = initVal.type;
-
+        var rt = initVal.symbol.type;
+        System.out.println(stmt.pos + "in localvardef: lt " + lt + "rt " + rt + initVal.symbol.name);
         if (lt.eq(BuiltInType.VAR)) {
             VarSymbol ns = new VarSymbol(stmt.symbol.name, rt, stmt.symbol.pos);
             ns.setDomain(stmt.symbol.domain());
