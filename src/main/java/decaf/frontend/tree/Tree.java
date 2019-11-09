@@ -1498,6 +1498,7 @@ public abstract class Tree {
         // Tree elements
         public Expr obj;
         public Id is;
+        public ClassSymbol isSymbol;
 
         public ClassTest(Expr obj, Id is, Pos pos) {
             super(Kind.CLASS_TEST, "ClassTest", pos);

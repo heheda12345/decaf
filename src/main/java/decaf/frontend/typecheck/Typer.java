@@ -96,11 +96,18 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         ctx.open(block.scope);
         for (var stmt : block.stmts) {
             stmt.accept(this, ctx);
+            block.returnType.addAll(stmt.returnType);
         }
         ctx.close();
         block.returns = !block.stmts.isEmpty() && block.stmts.get(block.stmts.size() - 1).returns;
-        if (block.returns)
-            block.returnType.addAll(block.stmts.get(block.stmts.size() - 1).returnType);
+        if (!block.returns && !block.returnType.isEmpty())
+            block.returnType.add(BuiltInType.VOID);
+        // System.out.println("in visit block: ");
+        // for (var t: block.returnType) {
+        //     System.out.println(t);
+        // }
+        // System.out.println("--------");
+
     }
 
     @Override
@@ -142,6 +149,11 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         stmt.returnType.addAll(stmt.trueBranch.returnType);
         if (stmt.falseBranch.isPresent())
             stmt.returnType.addAll(stmt.falseBranch.get().returnType);
+        // System.out.println("in visit assign: ");
+        // for (var t: stmt.returnType) {
+        //     System.out.println(t);
+        // }
+        // System.out.println("--------");
     }
 
     @Override
@@ -150,6 +162,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         loopLevel++;
         loop.body.accept(this, ctx);
         loopLevel--;
+        loop.returnType = loop.body.returnType;
     }
 
     @Override
@@ -161,6 +174,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         loopLevel++;
         for (var stmt : loop.body.stmts) {
             stmt.accept(this, ctx);
+            loop.returnType.addAll(stmt.returnType);
         }
         loopLevel--;
         ctx.close();
@@ -182,8 +196,15 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new BadReturnTypeError(stmt.pos, expected.toString(), actual.toString()));
         }
         stmt.returns = stmt.expr.isPresent();
-        if (stmt.returns)
+        if (stmt.expr.isPresent())
             stmt.returnType.add(stmt.expr.get().symbol.type);
+        else
+            stmt.returnType.add(BuiltInType.VOID);
+        // System.out.println("in visit ret: ");
+        // for (var t: stmt.returnType) {
+        //     System.out.println(t);
+        // }
+        // System.out.println("--------");
     }
 
     @Override
@@ -201,6 +222,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     private void checkTestExpr(Tree.Expr expr, ScopeStack ctx) {
         expr.accept(this, ctx);
         if (expr.symbol.type.noError() && !expr.symbol.type.eq(BuiltInType.BOOL)) {
+            System.out.println(expr.pos + "checktest" + expr.symbol.type);
             issue(new BadTestExpr(expr.pos));
         }
     }
@@ -559,9 +581,10 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             ctx.close();
         } else {
             Tree.Block blk = (Tree.Block) lambda.ret;
-            lambda.ret.accept(this, ctx);
-            // System.out.println("infered:" + inferType(blk.returnType, true));
-            ty = new FunType(inferType(blk.returnType, true), ((FunType)lambda.symbol.type).argTypes);
+            blk.accept(this, ctx);
+            var infer = inferType(blk.returnType, true, Optional.ofNullable(blk.pos));
+            // System.out.println("infered:" + infer);
+            ty = new FunType(infer, ((FunType)lambda.symbol.type).argTypes);
         }
         LambdaSymbol old = (LambdaSymbol) lambda.symbol;
         lambda.symbol = new LambdaSymbol(old.name, ty, old.scope, old.pos);
@@ -570,29 +593,53 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         ctx.close();
     }
 
-    Type inferType(List<Type> types, boolean upper) {
-        // System.out.println("inferType " + upper);
+    // pos is null when called in infer, then do not throw error
+    Type inferType(List<Type> types, boolean upper, Optional<Pos> pos) {
+        // System.out.println(pos + " inferType " + upper);
         // for (var t: types) {
         //     System.out.println(t);
         // }
         // System.out.println("that's all");
         if (types.isEmpty())
             return BuiltInType.VOID;
-        Type ty = BuiltInType.NULL;
-        for (var t: types) {
-            if (t.hasError())
-                return BuiltInType.ERROR;
-            if (!t.eq(BuiltInType.NULL)) {
-                ty = t;
-                break;
-            }
-        }
-        if (ty.eq(BuiltInType.NULL)) // not say this in doc...
-            return BuiltInType.NULL;
-        if (ty.isBaseType() || ty.isArrayType()) {
             for (var t: types) {
-                if (!t.eq(ty))
+                if (t.hasError())
+                return BuiltInType.ERROR;
+            }
+            boolean hasVoid = false, hasNonVoid = false;
+            List<Type> newTy = new ArrayList<>();
+            for (var t: types) {
+                if (t.eq(BuiltInType.VOID))
+                hasVoid = true;
+                else {
+                    newTy.add(t);
+                    hasNonVoid = true;
+                }
+            }
+            if (hasVoid && hasNonVoid && pos.isPresent()) {
+                issue(new MissingReturnError(pos.get()));
+            }
+            if (!hasNonVoid)
+            return BuiltInType.VOID;
+            if (!pos.isPresent())
+            newTy = types;
+            // System.out.println("newty" +newTy);
+            Type ty = BuiltInType.NULL;
+            for (var t: newTy) {
+                if (!t.eq(BuiltInType.NULL)) {
+                    ty = t;
+                    break;
+                }
+            }
+            if (ty.eq(BuiltInType.NULL)) // not say this in doc...
+            return BuiltInType.NULL;
+            if (ty.isBaseType() || ty.isArrayType()) {
+                for (var t: newTy) {
+                    if (!t.eq(ty)) {
+                    if (pos.isPresent())
+                        issue(new BadInferTypeError(pos.get()));
                     return BuiltInType.ERROR;
+                }
             }
             return ty;
         } else if (ty.isClassType()) {
@@ -600,8 +647,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             if (upper) {
                 while (true) {
                     boolean ok = true;
-                    for (var t: types) {
-                        if (!tc.subtypeOf(t)) {
+                    for (var t: newTy) {
+                        if (!t.subtypeOf(tc)) {
                             ok = false;
                             break;
                         }
@@ -612,43 +659,68 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         break;
                     tc = tc.superType.get();        
                 }
+                if (pos.isPresent())
+                    issue(new BadInferTypeError(pos.get()));
                 return BuiltInType.ERROR;
             } else {
-                for (var t1: types) {
+                for (var t1: newTy) {
                     boolean ok = true;
-                    for (var t2: types) {
-                        if (!t2.subtypeOf(t1)) {
+                    for (var t2: newTy) {
+                        if (!t1.subtypeOf(t2)) { 
                             ok = false;
                         }
                     }
                     if (ok)
                         return t1;
                 }
+                if (pos.isPresent())
+                    issue(new BadInferTypeError(pos.get()));
                 return BuiltInType.ERROR;
             }
         } else if (ty.isFuncType()) {
             var tf = (FunType)ty;
             int argCnt = tf.arity();
-            for (var t: types) {
-                if (!t.isFuncType())
+            for (var t: newTy) {
+                if (!t.isFuncType()) {
+                    if (pos.isPresent())
+                        issue(new BadInferTypeError(pos.get()));
                     return BuiltInType.ERROR; // whatif null?
-                if (((FunType)t).arity() != argCnt)
+                }
+                if (((FunType)t).arity() != argCnt) {
+                    if (pos.isPresent())
+                        issue(new BadInferTypeError(pos.get()));
                     return BuiltInType.ERROR;
+                }
             }
             List<Type> toCalc = new ArrayList<>();
-            for (var t:types) {
+            for (var t: newTy) {
                 toCalc.add(((FunType)t).returnType);
             }
-            FunType ret = new FunType(inferType(toCalc, true), new ArrayList<>());
+            FunType ret = new FunType(inferType(toCalc, upper, Optional.empty()), new ArrayList<>());
+            // System.out.println(toCalc + "result" + ret.returnType);
+            if (ret.eq(BuiltInType.ERROR)) {
+                if (pos.isPresent())
+                    issue(new BadInferTypeError(pos.get()));
+                return BuiltInType.ERROR;
+            }
             for (int i=0; i<argCnt; i++) {
                 toCalc.clear();
-                for (var t: types) {
+                for (var t: newTy) {
                     toCalc.add(((FunType)t).argTypes.get(i));
                 }
-                ret.argTypes.add(inferType(toCalc, false));
+                var infer = inferType(toCalc, !upper, Optional.empty());
+                // System.out.println(toCalc + "result" + infer);
+                if (infer.eq(BuiltInType.ERROR)) {
+                    if (pos.isPresent())
+                        issue(new BadInferTypeError(pos.get()));
+                    return BuiltInType.ERROR;
+                }
+                ret.argTypes.add(infer);
             }
             return ret;
         }
+        if (pos.isPresent())
+            issue(new BadInferTypeError(pos.get()));
         return BuiltInType.ERROR;
     }
 
@@ -664,7 +736,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         if (clazz.isEmpty()) {
             issue(new ClassNotFoundError(expr.pos, expr.is.name));
         } else {
-            expr.symbol = clazz.get();
+            expr.isSymbol = clazz.get();
         }
     }
 
