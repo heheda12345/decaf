@@ -107,8 +107,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         stmt.rhs.accept(this, ctx);
         var lt = stmt.lhs.symbol.type;
         var rt = stmt.rhs.symbol.type;
+        if (stmt.lhs.symbol.isMethodSymbol()) {
+            issue(new AssignClassMethodError(stmt.pos, stmt.lhs.name.get()));
+            return;
+        }
 
-        if (lt.noError() && (lt.isFuncType() || !rt.subtypeOf(lt))) {
+        if (lt.noError() && !rt.subtypeOf(lt)) {
             issue(new IncompatBinOpError(stmt.pos, lt.toString(), "=", rt.toString()));
         }
     }
@@ -419,7 +423,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         // special case like MyClass.foo: report error cannot access field 'foo' from 'class : MyClass'
                         if (!(var.isMethodSymbol() &&
                             ((MethodSymbol)var).isStatic())) {
-                            issue(new NotClassFieldError(expr.pos, expr.name.get(), v1.name.get()));
+                            issue(new NotClassFieldError(expr.pos, expr.name.get(), ctx.getClass(v1.name.get()).type.toString()));
                             return;
                         }
                     }
