@@ -355,7 +355,6 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         var earlier = ctx.findConflict(def.name);
         if (earlier.isPresent()) {
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
-            return;
         }
         
         def.typeLit.accept(this, ctx);
@@ -366,6 +365,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
         if (def.initVal.isPresent())
             def.initVal.get().accept(this, ctx);
+        if (earlier.isPresent())
+            return;
         if (def.typeLit.type.eq(BuiltInType.VOID)) {
             issue(new BadVarTypeError(def.pos, def.name));
             return;
