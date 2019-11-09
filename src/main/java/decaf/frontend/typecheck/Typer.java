@@ -26,6 +26,7 @@ import decaf.lowlevel.log.IndentPrinter;
 import decaf.printing.PrettyScope;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -99,7 +100,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         ctx.close();
         block.returns = !block.stmts.isEmpty() && block.stmts.get(block.stmts.size() - 1).returns;
         if (block.returns)
-            block.returnType = block.stmts.get(block.stmts.size() - 1).returnType;
+            block.returnType.addAll(block.stmts.get(block.stmts.size() - 1).returnType);
     }
 
     @Override
@@ -138,8 +139,9 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         stmt.falseBranch.ifPresent(b -> b.accept(this, ctx));
         // if-stmt returns a value iff both branches return
         stmt.returns = stmt.trueBranch.returns && stmt.falseBranch.isPresent() && stmt.falseBranch.get().returns;
-        if (stmt.returns)
-            stmt.returnType = stmt.trueBranch.returnType;
+        stmt.returnType.addAll(stmt.trueBranch.returnType);
+        if (stmt.falseBranch.isPresent())
+            stmt.returnType.addAll(stmt.falseBranch.get().returnType);
     }
 
     @Override
@@ -173,15 +175,15 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitReturn(Tree.Return stmt, ScopeStack ctx) {
-        var expected = ctx.currentMethod().type.returnType;
+        var expected = ((FunType)ctx.currentFun().type).returnType;
         stmt.expr.ifPresent(e -> e.accept(this, ctx));
         var actual = stmt.expr.map(e -> e.symbol.type).orElse(BuiltInType.VOID);
-        if (actual.noError() && !actual.subtypeOf(expected)) {
+        if (actual.noError() && !expected.eq(BuiltInType.VAR) && !actual.subtypeOf(expected)) {
             issue(new BadReturnTypeError(stmt.pos, expected.toString(), actual.toString()));
         }
         stmt.returns = stmt.expr.isPresent();
         if (stmt.returns)
-            stmt.returnType = stmt.expr.get().symbol.type;
+            stmt.returnType.add(stmt.expr.get().symbol.type);
     }
 
     @Override
@@ -558,14 +560,96 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         } else {
             Tree.Block blk = (Tree.Block) lambda.ret;
             lambda.ret.accept(this, ctx);
-            // System.out.println("visit lambda, blk ret " + blk.returnType);
-            ty = new FunType(blk.returnType, ((FunType)lambda.symbol.type).argTypes);
+            // System.out.println("infered:" + inferType(blk.returnType, true));
+            ty = new FunType(inferType(blk.returnType, true), ((FunType)lambda.symbol.type).argTypes);
         }
         LambdaSymbol old = (LambdaSymbol) lambda.symbol;
         lambda.symbol = new LambdaSymbol(old.name, ty, old.scope, old.pos);
         old.scope.setOwner((LambdaSymbol)lambda.symbol);
         ctx.updateSymbol(lambda.name, lambda.symbol);
         ctx.close();
+    }
+
+    Type inferType(List<Type> types, boolean upper) {
+        // System.out.println("inferType " + upper);
+        // for (var t: types) {
+        //     System.out.println(t);
+        // }
+        // System.out.println("that's all");
+        if (types.isEmpty())
+            return BuiltInType.VOID;
+        Type ty = BuiltInType.NULL;
+        for (var t: types) {
+            if (t.hasError())
+                return BuiltInType.ERROR;
+            if (!t.eq(BuiltInType.NULL)) {
+                ty = t;
+                break;
+            }
+        }
+        if (ty.eq(BuiltInType.NULL)) // not say this in doc...
+            return BuiltInType.NULL;
+        if (ty.isBaseType() || ty.isArrayType()) {
+            for (var t: types) {
+                if (!t.eq(ty))
+                    return BuiltInType.ERROR;
+            }
+            return ty;
+        } else if (ty.isClassType()) {
+            var tc = (ClassType)ty;
+            if (upper) {
+                while (true) {
+                    boolean ok = true;
+                    for (var t: types) {
+                        if (!tc.subtypeOf(t)) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (ok)
+                        return tc;
+                    if (tc.superType.isEmpty())
+                        break;
+                    tc = tc.superType.get();        
+                }
+                return BuiltInType.ERROR;
+            } else {
+                for (var t1: types) {
+                    boolean ok = true;
+                    for (var t2: types) {
+                        if (!t2.subtypeOf(t1)) {
+                            ok = false;
+                        }
+                    }
+                    if (ok)
+                        return t1;
+                }
+                return BuiltInType.ERROR;
+            }
+        } else if (ty.isFuncType()) {
+            var tf = (FunType)ty;
+            int argCnt = tf.arity();
+            for (var t: types) {
+                if (!t.isFuncType())
+                    return BuiltInType.ERROR; // whatif null?
+                if (((FunType)t).arity() != argCnt)
+                    return BuiltInType.ERROR;
+            }
+            List<Type> toCalc = new ArrayList<>();
+            for (var t:types) {
+                toCalc.add(((FunType)t).returnType);
+            }
+            FunType ret = new FunType(inferType(toCalc, true), new ArrayList<>());
+            for (int i=0; i<argCnt; i++) {
+                toCalc.clear();
+                for (var t: types) {
+                    toCalc.add(((FunType)t).argTypes.get(i));
+                }
+                ret.argTypes.add(inferType(toCalc, false));
+            }
+            return ret;
+        }
+        return BuiltInType.ERROR;
     }
 
     @Override

@@ -531,7 +531,7 @@ public abstract class Tree {
          * For type check: does this return a value?
          */
         public boolean returns = false;
-        public Type returnType = BuiltInType.VOID;
+        public List<Type> returnType = new ArrayList<>();
 
         public boolean isBlock() {
             return false;

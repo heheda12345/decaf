@@ -70,6 +70,11 @@ public class ScopeStack {
         return currMethod;
     }
 
+    public Symbol currentFun() {
+        Objects.requireNonNull(currFun);
+        return currFun;
+    }
+
     /**
      * Open a scope.
      * <p>
@@ -89,6 +94,10 @@ public class ScopeStack {
         } else if (scope.isFormalScope()) {
             var formalScope = (FormalScope) scope;
             currMethod = formalScope.getOwner();
+            currFun = formalScope.getOwner();
+        } else if (scope.isLambdaScope()) {
+            var lambdaScope = (LambdaScope) scope;
+            currFun = lambdaScope.getOwner();
         }
         scopeStack.push(scope);
     }
@@ -239,6 +248,7 @@ public class ScopeStack {
     private Stack<Scope> scopeStack = new Stack<>();
     private ClassSymbol currClass;
     private MethodSymbol currMethod;
+    private Symbol currFun;
 
     private Optional<Symbol> findWhile(String key, Predicate<Scope> cond, Predicate<Symbol> validator) {
         ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
