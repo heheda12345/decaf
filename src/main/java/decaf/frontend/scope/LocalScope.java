@@ -26,13 +26,13 @@ public class LocalScope extends Scope {
     }
 
     /**
-     * Collect all local scopes defined inside this scope.
+     * Collect all local scopes & lambda scopes defined inside this scope.
      *
-     * @return local scopes
+     * @return scopes
      */
-    public List<LocalScope> nestedLocalScopes() {
+    public List<Scope> nestedScopes() {
         return nested;
     }
 
-    private List<LocalScope> nested = new ArrayList<>();
+    private List<Scope> nested = new ArrayList<>();
 }

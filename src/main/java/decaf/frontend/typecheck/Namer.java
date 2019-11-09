@@ -293,11 +293,13 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     }
 
     @Override public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
-        var ls = new LambdaScope();
-        typeLambda(lambda, ctx, ls);
-        if (lambda.symbol.type.noError()) {
-            assert lambda.symbol.type instanceof FunType;
-            var symbol = new LambdaSymbol(lambda.name, (FunType) lambda.symbol.type, ls, lambda.pos);
+        var ls = new LambdaScope(ctx.currentScope());
+        FunType ty = typeLambda(lambda, ctx, ls);
+        lambda.symbol = new LambdaSymbol(lambda.name, ty, ls, lambda.pos);
+        LambdaSymbol symbol = (LambdaSymbol) lambda.symbol;
+        lambda.scope = ls;
+        ls.setOwner(symbol);
+        if (ty.noError()) {
             ctx.declare(symbol);
             ctx.open(ls);
             if (lambda.ty == LambdaType.EXPR) {
@@ -312,16 +314,15 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
     }
 
-    private void typeLambda(Tree.Lambda lambda, ScopeStack ctx, LambdaScope ls) {
+    private FunType typeLambda(Tree.Lambda lambda, ScopeStack ctx, LambdaScope ls) {
         ctx.open(ls);
         var argTypes = new ArrayList<Type>();
         for (var param: lambda.params) {
             param.accept(this, ctx);
             argTypes.add(param.typeLit.type);
         }
-        lambda.symbol = new LambdaSymbol("nonameLambdaSymbol", new FunType(BuiltInType.VAR, argTypes), ls, lambda.pos);
-        lambda.scope = ls;
         ctx.close();
+        return new FunType(BuiltInType.VAR, argTypes);
     }
 
     @Override

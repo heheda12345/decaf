@@ -24,6 +24,7 @@ import decaf.frontend.type.Type;
 import decaf.lowlevel.log.IndentPrinter;
 import decaf.printing.PrettyScope;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -483,7 +484,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         // System.out.println(expr.pos + "visitCall" + expr);
         expr.caller.accept(this, ctx);
         expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
-        // System.out.println(expr.pos + "visitcallafter" + expr.caller.symbol.type + expr.caller.name);
+        // System.out.println(expr.pos + "visitcallafter" + expr.caller.symbol);
         if (expr.caller.symbol.type.noError()) {
             if (!expr.caller.symbol.type.isFuncType()) {
                 issue(new NotCallableError(expr.pos, expr.caller.symbol.type.toString()));
@@ -534,19 +535,24 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitLambda(Lambda lambda, ScopeStack ctx) {
+        FunType ty = new FunType(BuiltInType.ERROR, new ArrayList<>());
         ctx.open(lambda.scope);
         if (lambda.ty == LambdaType.EXPR) {
             ctx.open(lambda.scope.nestedLocalScope());
             Tree.Expr expr = (Tree.Expr) lambda.ret;
             lambda.ret.accept(this, ctx);
-            lambda.symbol = new VarSymbol("NonameExprLambda", new FunType(expr.symbol.type, ((FunType)lambda.symbol.type).argTypes), lambda.pos);
+            ty = new FunType(expr.symbol.type, ((FunType)lambda.symbol.type).argTypes);
             ctx.close();
         } else {
             Tree.Block blk = (Tree.Block) lambda.ret;
             lambda.ret.accept(this, ctx);
             // System.out.println("visit lambda, blk ret " + blk.returnType);
-            lambda.symbol = new VarSymbol("NonameBlockLambda", new FunType(blk.returnType, ((FunType)lambda.symbol.type).argTypes), lambda.pos);
+            ty = new FunType(blk.returnType, ((FunType)lambda.symbol.type).argTypes);
         }
+        LambdaSymbol old = (LambdaSymbol) lambda.symbol;
+        lambda.symbol = new LambdaSymbol(old.name, ty, old.scope, old.pos);
+        old.scope.setOwner((LambdaSymbol)lambda.symbol);
+        ctx.updateSymbol(lambda.name, lambda.symbol);
         ctx.close();
     }
 

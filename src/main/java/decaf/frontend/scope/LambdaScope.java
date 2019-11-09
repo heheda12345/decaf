@@ -9,8 +9,10 @@ import decaf.frontend.tree.Pos;
  */
 public class LambdaScope extends Scope {
 
-    public LambdaScope() {
+    public LambdaScope(Scope parent) {
         super(Kind.LAMBDA);
+        assert parent.isLocalScope();
+        ((LocalScope) parent).nestedScopes().add(this);
     }
 
     public LambdaSymbol getOwner() {
