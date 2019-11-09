@@ -358,7 +358,10 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
         
         def.typeLit.accept(this, ctx);
-        Type ty = def.typeLit.type.eq(BuiltInType.VOID) ? BuiltInType.ERROR : def.typeLit.type;
+        Type ty = def.typeLit.type;
+        if (ty.eq(BuiltInType.VOID)) {
+            issue(new BadVarTypeError(def.pos, def.name));
+        }
         if (def.initVal.isPresent()  && def.initVal.get() instanceof Tree.Lambda) {
             var symbol = new VarSymbol(def.name, ty, def.id.pos);
             ctx.declare(symbol);
@@ -413,6 +416,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitAssign(Assign that, ScopeStack ctx) {
+        that.lhs.accept(this, ctx);
         that.rhs.accept(this, ctx);
     }
 
