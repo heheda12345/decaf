@@ -293,6 +293,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     }
 
     @Override public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
+        // System.out.println(lambda.pos + "visitlambda:" + lambda);
         var ls = new LambdaScope(ctx.currentScope());
         FunType ty = typeLambda(lambda, ctx, ls);
         lambda.symbol = new LambdaSymbol(lambda.name, ty, ls, lambda.pos);
@@ -356,8 +357,13 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
             return;
         }
-
+        
         def.typeLit.accept(this, ctx);
+        if (def.initVal.isPresent()  && def.initVal.get() instanceof Tree.Lambda) {
+            var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
+            ctx.declare(symbol);
+            def.symbol = symbol;
+        }
         if (def.initVal.isPresent())
             def.initVal.get().accept(this, ctx);
         if (def.typeLit.type.eq(BuiltInType.VOID)) {
