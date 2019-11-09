@@ -11,6 +11,7 @@ import decaf.frontend.symbol.Symbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.tree.Tree;
+import decaf.frontend.tree.Tree.IndexSel;
 import decaf.frontend.tree.Tree.Lambda;
 import decaf.frontend.tree.Tree.NewArray;
 import decaf.frontend.tree.Tree.NewClass;
@@ -107,13 +108,20 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         stmt.rhs.accept(this, ctx);
         var lt = stmt.lhs.symbol.type;
         var rt = stmt.rhs.symbol.type;
-        if (stmt.lhs.symbol.isMethodSymbol()) {
-            issue(new AssignClassMethodError(stmt.pos, stmt.lhs.name.get()));
-            return;
-        }
-
-        if (lt.noError() && !rt.subtypeOf(lt)) {
-            issue(new IncompatBinOpError(stmt.pos, lt.toString(), "=", rt.toString()));
+        if (lt.noError()) {
+            if (stmt.lhs.symbol.isMethodSymbol()) {
+                issue(new AssignClassMethodError(stmt.pos, stmt.lhs.name.get()));
+                return;
+            }
+    
+            if (!ctx.canAssign(stmt.lhs.symbol.name) && !(stmt.lhs instanceof IndexSel)) {
+                issue(new AssignCapturedError(stmt.pos));
+                return;
+            }
+    
+            if (!rt.subtypeOf(lt)) {
+                issue(new IncompatBinOpError(stmt.pos, lt.toString(), "=", rt.toString()));
+            }
         }
     }
 

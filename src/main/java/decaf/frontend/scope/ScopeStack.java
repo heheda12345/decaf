@@ -165,7 +165,31 @@ public class ScopeStack {
         return lookup(key);
     }
 
+    public boolean canAssign(String key) {
+        boolean inLambdaScope = false;
+        boolean inClassScope = false;
+        boolean passLambda = false;
+        boolean inMiddle = false;
+        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
+        while (iter.hasPrevious()) {
+            var scope = iter.previous();
+            var symbol = scope.find(key);
+            if (symbol.isPresent()) {
+                if (!passLambda)
+                    inLambdaScope = true;
+                if (scope.isClassScope())
+                    inClassScope  = true;
+                else if (passLambda)
+                    inMiddle = true;
+            }
+            if (scope.isLambdaScope())
+                passLambda = true;
+        }
+        return !passLambda || inLambdaScope || (!inMiddle && inClassScope);
+    }
+
     public void updateSymbol(String key, Symbol symbol) {
+        // System.out.println("update " + key + " type:" + symbol.type + "scope: " + currentScope());
         if (currentScope().isFormalOrLocalScope())
             updateWhile(key, symbol, Scope::isFormalOrLocalScope, whatever -> true);
         else
@@ -228,7 +252,6 @@ public class ScopeStack {
     }
 
     private void updateWhile(String key, Symbol newSymbol, Predicate<Scope> cond, Predicate<Symbol> validator) {
-        System.out.println(newSymbol);
         ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
         while (iter.hasPrevious()) {
             var scope = iter.previous();
