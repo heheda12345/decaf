@@ -293,7 +293,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     }
 
     @Override public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
-        // System.out.println(lambda.pos + "visitlambda:" + lambda);
+        // System.out.println(lambda.pos + "visitlambda namer:" + lambda);
         var ls = new LambdaScope(ctx.currentScope());
         FunType ty = typeLambda(lambda, ctx, ls);
         lambda.symbol = new LambdaSymbol(lambda.name, ty, ls, lambda.pos);
@@ -358,8 +358,9 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         }
         
         def.typeLit.accept(this, ctx);
+        Type ty = def.typeLit.type.eq(BuiltInType.VOID) ? BuiltInType.ERROR : def.typeLit.type;
         if (def.initVal.isPresent()  && def.initVal.get() instanceof Tree.Lambda) {
-            var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
+            var symbol = new VarSymbol(def.name, ty, def.id.pos);
             ctx.declare(symbol);
             def.symbol = symbol;
         }
@@ -367,13 +368,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             def.initVal.get().accept(this, ctx);
         if (earlier.isPresent())
             return;
-        if (def.typeLit.type.eq(BuiltInType.VOID)) {
-            issue(new BadVarTypeError(def.pos, def.name));
-            return;
-        }
-
         if (def.typeLit.type.noError()) {
-            var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
+            var symbol = new VarSymbol(def.name, ty, def.id.pos);
             ctx.declare(symbol);
             def.symbol = symbol;
             if (def.initVal.isPresent() && def.initVal.get() instanceof Tree.Lambda) {
@@ -411,6 +407,8 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitCall(Call call, ScopeStack ctx) {
         call.caller.accept(this, ctx);
+        for (var arg: call.args)
+            arg.accept(this, ctx);
     }
 
     @Override

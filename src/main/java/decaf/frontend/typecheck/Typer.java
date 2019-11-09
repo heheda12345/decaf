@@ -431,11 +431,17 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             allowClassNameVar = true;
             receiver.accept(this, ctx);
             allowClassNameVar = false;
-            // System.out.println("has receiver " + receiver.symbol.type + receiver.symbol.name);
+            // System.out.println("has receiver " + receiver.symbol.type + receiver.symbol.name + "expr: " + expr.name.get());
             var rt = receiver.symbol.type;
             expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
             
             if (rt.noError()) {
+                if (rt.isArrayType()) {
+                    if (expr.name.get().equals("length")) {
+                        expr.symbol = new VarSymbol("length", new FunType(BuiltInType.INT, new ArrayList<>()), expr.pos);
+                        return;
+                    }
+                }
                 if (!rt.isClassType()) {
                     issue(new NotClassFieldError(expr.pos, expr.name.get(), rt.toString()));
                     return;
@@ -490,7 +496,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     expr.symbol = var;
                     return;
                 }
-                
+
                 issue(new NotClassFieldError(expr.pos, expr.name.get(), ct.toString()));
             } 
         }
@@ -520,7 +526,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         // System.out.println(expr.pos + "visitCall" + expr);
         expr.caller.accept(this, ctx);
         expr.symbol = new VarSymbol("NonameCallErr", BuiltInType.ERROR, expr.pos);
-        // System.out.println(expr.pos + "visitcallafter" + expr.caller.symbol);
+        // System.out.println(expr.pos + "visitcallafter" + expr.caller.symbol.type);
         if (expr.caller.symbol.type.noError()) {
             if (!expr.caller.symbol.type.isFuncType()) {
                 issue(new NotCallableError(expr.pos, expr.caller.symbol.type.toString()));
@@ -767,15 +773,17 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         
         var lt = stmt.symbol.type;
         var rt = initVal.symbol.type;
-        // System.out.println(stmt.pos + "in localvardef: lt " + lt + "rt " + rt + initVal.symbol.name);
+        // System.out.println(stmt.pos + "in localvardef: lt " + lt + " rt " + rt + initVal.symbol.name);
         if (lt.eq(BuiltInType.VAR)) {
+            if (rt.eq(BuiltInType.VOID)) {
+                issue(new BadVarTypeError(stmt.pos, stmt.name));
+                rt = BuiltInType.ERROR;
+            }
             VarSymbol ns = new VarSymbol(stmt.symbol.name, rt, stmt.symbol.pos);
             ns.setDomain(stmt.symbol.domain());
             stmt.symbol = ns;
             ctx.updateSymbol(stmt.symbol.name, ns);
             lt = rt;
-            if (rt.eq(BuiltInType.VOID))
-                issue(new BadVarTypeError(stmt.pos, stmt.name));
         }
 
         if (lt.noError() && !rt.subtypeOf(lt)) {
