@@ -340,12 +340,18 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     public void visitTLambda(TLambda typeLambda, ScopeStack ctx) {
         typeLambda.retType.accept(this, ctx);
         var argTypes = new ArrayList<Type>();
+        boolean hasError = false;
         for (var argType: typeLambda.argTypes) {
             argType.accept(this, ctx);
             if (argType instanceof TVoid) {
                 issue(new FunctionVoidArgError(argType.pos));
+                hasError = true;
             }
             argTypes.add(argType.type);
+        }
+        if (hasError) {
+            typeLambda.type = BuiltInType.ERROR;
+            return;
         }
         typeLambda.type = new FunType(typeLambda.retType.type, argTypes);
     }
