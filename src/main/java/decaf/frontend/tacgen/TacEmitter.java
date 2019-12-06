@@ -238,6 +238,19 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         };
         expr.lhs.accept(this, mv);
         expr.rhs.accept(this, mv);
+        if (op ==  TacInstr.Binary.Op.DIV || op == TacInstr.Binary.Op.MOD) {
+            var zero = mv.visitLoad(0);
+            var error = mv.visitBinary(TacInstr.Binary.Op.EQU, expr.rhs.val, zero);
+            var handler = new Consumer<FuncVisitor>() {
+                @Override
+                public void accept(FuncVisitor v) {
+                    v.visitPrint(RuntimeError.DIVISION_BY_ZERO);
+                    v.visitIntrinsicCall(Intrinsic.HALT);
+                }
+            };
+            emitIfThen(error, handler, mv);
+        }
+        
         expr.val = mv.visitBinary(op, expr.lhs.val, expr.rhs.val);
     }
 
