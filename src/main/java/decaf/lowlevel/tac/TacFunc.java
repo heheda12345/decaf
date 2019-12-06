@@ -29,7 +29,7 @@ public class TacFunc implements Comparable<TacFunc> {
     int tempUsed;
 
     void add(TacInstr instr) {
-        System.out.println("[instr]" + instr.toString());
+        // System.out.println("[instr]" + instr.toString());
         instrSeq.add(instr);
     }
 

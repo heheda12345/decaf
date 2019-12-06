@@ -383,12 +383,15 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             expr.symbol = new VarSymbol("NONAMESELERRNORECIVER", BuiltInType.ERROR, expr.pos);
             var symbol = ctx.lookupBefore(expr.name.get(), localVarDefPos.orElse(expr.pos));
             if (symbol.isPresent()) {
-                // System.out.println("symbol present " + symbol.get());
+                // System.out.println("symbol present " + symbol.get() + symbol.get().getClass());
                 if (symbol.get().isVarSymbol()) {
                     var var = (VarSymbol) symbol.get();
                     if (var.isMemberVar()) {
                         if (ctx.currentMethod().isStatic()) {
                             issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, expr.name.get()));
+                        } else {
+                            expr.setThis();
+                            expr.receiver.get().symbol = ctx.currentClass();
                         }
                     }
                     expr.symbol = symbol.get();
@@ -404,13 +407,17 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                 }
 
                 if (symbol.get().isMethodSymbol()) { // from visitCall
-                    // System.out.println("typer: find method symbol " + symbol.get().name + symbol.get().type);
+                    // System.out.println("typer: find method symbol " + symbol.get().name + " " + symbol.get().type);
                     var method = (MethodSymbol)symbol.get();
                     if (ctx.currentMethod().isStatic() && !method.isStatic()) {
                         issue(new RefNonStaticError(expr.pos, ctx.currentMethod().name, method.name));
                         return;
                     }
                     expr.symbol = symbol.get();
+                    if (!expr.receiver.isPresent() && !ctx.currentMethod().isStatic()) {
+                        expr.setThis();
+                        expr.receiver.get().symbol = ctx.currentClass();
+                    }
                     return;
                 }
 

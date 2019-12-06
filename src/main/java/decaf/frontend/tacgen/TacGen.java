@@ -20,16 +20,17 @@ public class TacGen extends Phase<Tree.TopLevel, TacProg> implements TacEmitter 
 
     @Override
     public TacProg transform(Tree.TopLevel tree) {
+        System.out.println("start transform");
         // Create class info.
         var info = new ArrayList<ClassInfo>();
         for (var clazz : tree.classes) {
             info.add(clazz.symbol.getInfo());
         }
         var pw = new ProgramWriter(info);
-
+        System.out.println("create classinfo end");
         // Step 1: create virtual tables.
         pw.visitVTables();
-
+        System.out.println("create vtable end");
         // Step 2: emit tac instructions for every method.
         for (var clazz : tree.classes) {
             for (var method : clazz.methods()) {
@@ -51,12 +52,13 @@ public class TacGen extends Phase<Tree.TopLevel, TacProg> implements TacEmitter 
                         i++;
                     }
                 }
-                // SOS
-                assert(method.body.isPresent());
-                method.body.get().accept(this, mv);
-                mv.visitEnd();
+                if (method.body.isPresent()) {
+                    method.body.get().accept(this, mv);
+                }
+                mv.visitEnd(); // SOS magic?
             }
         }
+        System.out.println("emit end");
 
         return pw.visitEnd();
     }

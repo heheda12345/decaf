@@ -4,6 +4,7 @@ import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Visitor;
+import decaf.frontend.tree.Tree.VarSel;
 import decaf.frontend.type.BuiltInType;
 import decaf.lowlevel.instr.Temp;
 import decaf.lowlevel.label.Label;
@@ -294,8 +295,9 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitCall(Tree.Call expr, FuncVisitor mv) {
+        System.out.println("visitcall" + expr.pos);
         if (expr.isArrayLength) { // special case for array.length()
-            var array = expr.receiver.get();
+            var array = ((VarSel)expr.caller).receiver.get();
             array.accept(this, mv);
             expr.val = mv.visitLoadFrom(array.val, -4);
             return;
@@ -305,8 +307,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var temps = new ArrayList<Temp>();
         expr.args.forEach(arg -> temps.add(arg.val));
 
-        assert(expr.symbol instanceof MethodSymbol);
-        var symbol = (MethodSymbol)expr.symbol;
+        assert(expr.caller.symbol instanceof MethodSymbol);
+        var symbol = (MethodSymbol)expr.caller.symbol;
         if (symbol.isStatic()) {
             if (symbol.type.returnType.isVoidType()) {
                 mv.visitStaticCall(symbol.owner.name, symbol.name, temps);
@@ -314,7 +316,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 expr.val = mv.visitStaticCall(symbol.owner.name, symbol.name, temps, true);
             }
         } else {
-            var object = expr.receiver.get();
+            assert(((VarSel)expr.caller).receiver.isPresent());
+            var object = ((VarSel)expr.caller).receiver.get();
             object.accept(this, mv);
             if (symbol.type.returnType.isVoidType()) {
                 mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps);
