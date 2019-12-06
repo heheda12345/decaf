@@ -1625,7 +1625,7 @@ public abstract class Tree {
     public static class Call extends Expr {
         // Tree elements
         public Expr caller;
-        public Optional<Expr> receiver; // SOS for compile
+        public Optional<Expr> receiver;
         public List<Expr> args;
 
         public Call(Expr caller, List<Expr> args, Pos pos) {

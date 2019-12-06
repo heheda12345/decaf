@@ -52,7 +52,8 @@ public class TacGen extends Phase<Tree.TopLevel, TacProg> implements TacEmitter 
                     }
                 }
                 // SOS
-                // method.body.accept(this, mv);
+                assert(method.body.isPresent());
+                method.body.get().accept(this, mv);
                 mv.visitEnd();
             }
         }
