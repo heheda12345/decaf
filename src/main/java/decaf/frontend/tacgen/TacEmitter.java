@@ -266,31 +266,54 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             var symbol = (MethodSymbol) expr.symbol;
             assert(expr.name.isPresent());
             int numArgs = symbol.type.arity();
-            
-            // translate the new function
-            var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
-            var funcObj = mvFunc.getArgTemp(0);
-            funcObj = mvFunc.visitLoadFrom(funcObj, 4);
-            var args = new ArrayList<Temp>();
-            for (int i=0; i<numArgs; i++)
-                args.add(mvFunc.getArgTemp(i+1));
-            // System.out.println("methodsymbol " + symbol.type + " " + symbol.type.returnType.isVoidType());
-            if (symbol.type.returnType.isVoidType()) {
-                mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args);
-                mvFunc.visitReturn();
-            } else {
-                var ret = mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args, true);
-                mvFunc.visitReturn(ret);
-            }
-            mvFunc.visitEnd();
+            if (symbol.isStatic()) {
+                // translate the new function
+                var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
+                var args = new ArrayList<Temp>();
+                for (int i=0; i<numArgs; i++)
+                    args.add(mvFunc.getArgTemp(i+1));
+                // System.out.println("methodsymbol " + symbol.type + " " + symbol.type.returnType.isVoidType());
+                if (symbol.type.returnType.isVoidType()) {
+                    mvFunc.visitStaticCall(symbol.owner.name, expr.name.get(), args);
+                    mvFunc.visitReturn();
+                } else {
+                    var ret = mvFunc.visitStaticCall(symbol.owner.name, expr.name.get(), args, true);
+                    mvFunc.visitReturn(ret);
+                }
+                mvFunc.visitEnd();
 
-            // translate the function variable
-            var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
-            var eight = mv.visitLoad(8);
-            var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
-            mv.visitStoreTo(a, 0, funcPointer);
-            mv.visitStoreTo(a, 4, mv.getArgTemp(0));
-            expr.val = a;
+                // translate the function variable
+                var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
+                var eight = mv.visitLoad(4);
+                var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
+                mv.visitStoreTo(a, 0, funcPointer);
+                expr.val = a;
+            } else {
+                // translate the new function
+                var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
+                var funcObj = mvFunc.getArgTemp(0);
+                funcObj = mvFunc.visitLoadFrom(funcObj, 4);
+                var args = new ArrayList<Temp>();
+                for (int i=0; i<numArgs; i++)
+                    args.add(mvFunc.getArgTemp(i+1));
+                // System.out.println("methodsymbol " + symbol.type + " " + symbol.type.returnType.isVoidType());
+                if (symbol.type.returnType.isVoidType()) {
+                    mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args);
+                    mvFunc.visitReturn();
+                } else {
+                    var ret = mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args, true);
+                    mvFunc.visitReturn(ret);
+                }
+                mvFunc.visitEnd();
+    
+                // translate the function variable
+                var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
+                var eight = mv.visitLoad(8);
+                var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
+                mv.visitStoreTo(a, 0, funcPointer);
+                mv.visitStoreTo(a, 4, mv.getArgTemp(0));
+                expr.val = a;
+            }
         } else {
             assert(expr.symbol instanceof VarSymbol);
             assert(expr.name.isPresent());
