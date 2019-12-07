@@ -6,14 +6,18 @@ import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Visitor;
 import decaf.frontend.tree.Tree.VarSel;
 import decaf.frontend.type.BuiltInType;
+import decaf.frontend.type.FunType;
 import decaf.lowlevel.instr.Temp;
 import decaf.lowlevel.label.Label;
+import decaf.lowlevel.tac.ClassInfo;
 import decaf.lowlevel.tac.FuncVisitor;
 import decaf.lowlevel.tac.Intrinsic;
+import decaf.lowlevel.tac.ProgramWriter;
 import decaf.lowlevel.tac.RuntimeError;
 import decaf.lowlevel.tac.TacInstr;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -257,15 +261,47 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitVarSel(Tree.VarSel expr, FuncVisitor mv) {
-        assert(expr.symbol instanceof VarSymbol);
-        assert(expr.name.isPresent());
-        var symbol = (VarSymbol)expr.symbol;
-        if (symbol.isMemberVar()) {
-            var object = expr.receiver.get();
-            object.accept(this, mv);
-            expr.val = mv.visitMemberAccess(object.val, symbol.getOwner().name, expr.name.get());
-        } else { // local or param
-            expr.val = symbol.temp;
+        // System.out.println("visitVarSel " + expr.pos + expr.symbol.getClass() + " " + expr.symbol.type);
+        if (expr.symbol.isMethodSymbol()) {
+            var symbol = (MethodSymbol) expr.symbol;
+            assert(expr.name.isPresent());
+            int numArgs = symbol.type.arity();
+            
+            // translate the new function
+            var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
+            var funcObj = mvFunc.getArgTemp(0);
+            funcObj = mvFunc.visitLoadFrom(funcObj, 4);
+            var args = new ArrayList<Temp>();
+            for (int i=0; i<numArgs; i++)
+                args.add(mvFunc.getArgTemp(i+1));
+            // System.out.println("methodsymbol " + symbol.type + " " + symbol.type.returnType.isVoidType());
+            if (symbol.type.returnType.isVoidType()) {
+                mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args);
+                mvFunc.visitReturn();
+            } else {
+                var ret = mvFunc.visitMemberCall(funcObj, symbol.owner.name, expr.name.get(), args, true);
+                mvFunc.visitReturn(ret);
+            }
+            mvFunc.visitEnd();
+
+            // translate the function variable
+            var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
+            var eight = mv.visitLoad(8);
+            var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
+            mv.visitStoreTo(a, 0, funcPointer);
+            mv.visitStoreTo(a, 4, mv.getArgTemp(0));
+            expr.val = a;
+        } else {
+            assert(expr.symbol instanceof VarSymbol);
+            assert(expr.name.isPresent());
+            var symbol = (VarSymbol)expr.symbol;
+            if (symbol.isMemberVar()) {
+                var object = expr.receiver.get();
+                object.accept(this, mv);
+                expr.val = mv.visitMemberAccess(object.val, symbol.getOwner().name, expr.name.get());
+            } else { // local or param
+                expr.val = symbol.temp;
+            }
         }
     }
 
@@ -295,7 +331,6 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitCall(Tree.Call expr, FuncVisitor mv) {
-        System.out.println("visitcall" + expr.pos);
         if (expr.isArrayLength) { // special case for array.length()
             var array = ((VarSel)expr.caller).receiver.get();
             array.accept(this, mv);
@@ -307,22 +342,33 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var temps = new ArrayList<Temp>();
         expr.args.forEach(arg -> temps.add(arg.val));
 
-        assert(expr.caller.symbol instanceof MethodSymbol);
-        var symbol = (MethodSymbol)expr.caller.symbol;
-        if (symbol.isStatic()) {
-            if (symbol.type.returnType.isVoidType()) {
-                mv.visitStaticCall(symbol.owner.name, symbol.name, temps);
+        // System.out.println("visitCall " + expr.pos + " " + expr.caller.symbol.getClass());
+        if (expr.caller.symbol.isMethodSymbol()) {
+            var symbol = (MethodSymbol)expr.caller.symbol;
+            if (symbol.isStatic()) {
+                if (symbol.type.returnType.isVoidType()) {
+                    mv.visitStaticCall(symbol.owner.name, symbol.name, temps);
+                } else {
+                    expr.val = mv.visitStaticCall(symbol.owner.name, symbol.name, temps, true);
+                }
             } else {
-                expr.val = mv.visitStaticCall(symbol.owner.name, symbol.name, temps, true);
+                assert(((VarSel)expr.caller).receiver.isPresent());
+                var object = ((VarSel)expr.caller).receiver.get();
+                object.accept(this, mv);
+                if (symbol.type.returnType.isVoidType()) {
+                    mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps);
+                } else {
+                    expr.val = mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps, true);
+                }
             }
         } else {
-            assert(((VarSel)expr.caller).receiver.isPresent());
-            var object = ((VarSel)expr.caller).receiver.get();
-            object.accept(this, mv);
-            if (symbol.type.returnType.isVoidType()) {
-                mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps);
+            // System.out.println("type " + expr.caller.symbol.type.getClass() + " " + expr.caller.symbol.type);
+            assert(expr.caller.symbol.type.isFuncType());
+            expr.caller.accept(this, mv);
+            if (((FunType)expr.caller.symbol.type).returnType.isVoidType()) {
+                mv.visitExtendCall(expr.caller.val, temps);
             } else {
-                expr.val = mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps, true);
+                expr.val = mv.visitExtendCall(expr.caller.val, temps, true);
             }
         }
     }

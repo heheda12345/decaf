@@ -375,7 +375,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
     @Override
     public void visitVarSel(Tree.VarSel expr, ScopeStack ctx) {
         // System.out.println(expr.pos + "visit varsel " + expr);
-        assert expr.name.isPresent();
+        assert(expr.name.isPresent());
         if (expr.receiver.isEmpty()) {
             // Variable, which should be complicated since a legal variable could refer to a local var,
             // a visible member var, and a class name.
@@ -562,7 +562,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             for (var arg : args) {
                 arg.accept(this, ctx);
             }
-            assert expr.caller.symbol.isLambdaSymbol() || expr.caller.symbol.isMethodSymbol();
+            // assert(expr.caller.symbol.isLambdaSymbol() || expr.caller.symbol.isMethodSymbol());
             FunType et = (FunType) expr.caller.symbol.type;
             // check signature compatibility
             if (et.arity() != args.size()) {

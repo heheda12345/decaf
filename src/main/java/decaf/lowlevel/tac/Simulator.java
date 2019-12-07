@@ -227,8 +227,13 @@ public final class Simulator {
      * Instruction executor.
      */
     private class InstrExecutor implements TacInstr.Visitor {
+        void print(String st) {
+            // System.out.println(st);
+        }
+
         @Override
         public void visitAssign(TacInstr.Assign instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             frame.array[instr.dst.index] = frame.array[instr.src.index];
 
@@ -237,6 +242,7 @@ public final class Simulator {
 
         @Override
         public void visitLoadVTbl(TacInstr.LoadVTbl instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             frame.array[instr.dst.index] = _vtable_to_addr.get(instr.vtbl.label.name);
 
@@ -245,6 +251,7 @@ public final class Simulator {
 
         @Override
         public void visitLoadImm4(TacInstr.LoadImm4 instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             frame.array[instr.dst.index] = instr.value;
 
@@ -253,6 +260,7 @@ public final class Simulator {
 
         @Override
         public void visitLoadStrConst(TacInstr.LoadStrConst instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             var index = _string_pool.add(instr.value);
             frame.array[instr.dst.index] = index;
@@ -262,6 +270,7 @@ public final class Simulator {
 
         @Override
         public void visitUnary(TacInstr.Unary instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             int operand = frame.array[instr.operand.index];
             frame.array[instr.dst.index] = switch (instr.op) {
@@ -274,6 +283,7 @@ public final class Simulator {
 
         @Override
         public void visitBinary(TacInstr.Binary instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             var lhs = frame.array[instr.lhs.index];
             var rhs = frame.array[instr.rhs.index];
@@ -298,11 +308,13 @@ public final class Simulator {
 
         @Override
         public void visitBranch(TacInstr.Branch instr) {
+            print("[exe]" + instr);
             _pc = _label_to_addr.get(instr.target.name);
         }
 
         @Override
         public void visitCondBranch(TacInstr.CondBranch instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             var jump = switch (instr.op) {
                 case BEQZ -> frame.array[instr.cond.index] == 0;
@@ -318,6 +330,7 @@ public final class Simulator {
 
         @Override
         public void visitReturn(TacInstr.Return instr) {
+            print("[exe]" + instr);
             var value = instr.value.map(temp -> _call_stack.peek().array[temp.index]);
             returnWith(value);
         }
@@ -336,6 +349,7 @@ public final class Simulator {
 
         @Override
         public void visitParm(TacInstr.Parm instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             _actual_args.add(frame.array[instr.value.index]);
 
@@ -344,6 +358,7 @@ public final class Simulator {
 
         @Override
         public void visitIndirectCall(TacInstr.IndirectCall instr) {
+            print("[exe]" + instr);
             // Save caller's state
             var frame = _call_stack.peek();
             frame.pcNext = _pc + 1;
@@ -358,6 +373,7 @@ public final class Simulator {
 
         @Override
         public void visitDirectCall(TacInstr.DirectCall instr) {
+            print("[exe]" + instr);
             // Save caller's state
             var frame = _call_stack.peek();
             frame.pcNext = _pc + 1;
@@ -413,6 +429,7 @@ public final class Simulator {
 
         @Override
         public void visitMemory(TacInstr.Memory instr) {
+            print("[exe]" + instr);
             var frame = _call_stack.peek();
             int base = frame.array[instr.base.index];
             int offset = instr.offset;

@@ -144,6 +144,7 @@ public class ProgramWriter {
 
         ctx.putVTable(vtbl);
         ctx.putOffsets(vtbl);
+        // vtbl.print();
     }
 
     class Context {
@@ -162,6 +163,23 @@ public class ProgramWriter {
 
         FuncLabel getFuncLabel(String clazz, String method) {
             return labels.get(clazz + "." + method);
+        }
+
+        FuncLabel freshVtableFunc(String funcName) {
+            var className = "@@" + funcName + "_" + 
+            nextFuncId;
+            nextFuncId++;
+            var memberMethods = new HashSet<String>();
+            memberMethods.add(funcName);
+
+            var clazz = new ClassInfo(className, Optional.empty(), new HashSet<>(), memberMethods, new HashSet<>(), false);
+            ctx.putConstructorLabel(clazz.name);
+            ctx.putFuncLabel(clazz.name, funcName);
+            
+            buildVTableFor(clazz);
+            createConstructorFor(clazz.name);
+
+            return new FuncLabel(className, funcName);
         }
 
         Label freshLabel() {
@@ -215,6 +233,6 @@ public class ProgramWriter {
         List<TacFunc> funcs = new ArrayList<>();
 
         private int nextTempLabelId = 1;
+        private int nextFuncId = 1;
     }
-
 }

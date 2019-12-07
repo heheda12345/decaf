@@ -223,6 +223,29 @@ public class FuncVisitor {
         visitMemberCall(object, clazz, method, args, false);
     }
 
+    public Temp visitExtendCall(Temp object, List<Temp> args, boolean needReturn) {
+        System.out.println("need return " + needReturn);
+        Temp temp = null;
+        var entry = visitLoadFrom(object);
+        entry = visitLoadFrom(entry, 0);
+        entry = visitLoadFrom(entry, 8);
+        func.add(new TacInstr.Parm(object));
+        for (var arg : args) {
+            func.add(new TacInstr.Parm(arg));
+        }
+        if (needReturn) {
+            temp = freshTemp();
+            func.add(new TacInstr.IndirectCall(temp, entry));
+        } else {
+            func.add(new TacInstr.IndirectCall(entry));
+        }
+        return temp;
+    }
+
+    public void visitExtendCall(Temp object, List<Temp> args) {
+        visitExtendCall(object, args, false);
+    }
+
     /**
      * Append instructions to invoke a static method.
      *
@@ -369,6 +392,7 @@ public class FuncVisitor {
         }
         func.tempUsed = getUsedTemp();
         ctx.funcs.add(func);
+        // System.out.println("[end]" + funcLabel.clazz + "." + funcLabel.name);
     }
 
     /**
@@ -378,6 +402,17 @@ public class FuncVisitor {
      */
     public Label freshLabel() {
         return ctx.freshLabel();
+    }
+
+    /**
+     * Generate TAC code for a new function
+     * 
+     * @param funcName function name
+     * @param numArgs number of arguments
+     */
+    public FuncVisitor freshFunc(String funcName, int numArgs) {
+        var entry = ctx.freshVtableFunc(funcName);
+        return new FuncVisitor(entry, numArgs, ctx); 
     }
 
     /**
@@ -415,6 +450,7 @@ public class FuncVisitor {
 
     FuncVisitor(FuncLabel entry, int numArgs, ProgramWriter.Context ctx) {
         this.ctx = ctx;
+        funcLabel = entry;
         func = new TacFunc(entry, numArgs);
         visitLabel(entry);
         argsTemps = new Temp[numArgs];
@@ -430,4 +466,7 @@ public class FuncVisitor {
     private int nextTempId = 0;
 
     private Temp[] argsTemps;
+
+    public final FuncLabel funcLabel;
+
 }
