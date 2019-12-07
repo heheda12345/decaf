@@ -1,5 +1,8 @@
 package decaf.frontend.symbol;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import decaf.frontend.scope.Scope;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.type.Type;
@@ -28,6 +31,7 @@ public abstract class Symbol implements Comparable<Symbol> {
         this.name = name;
         this.type = type;
         this.pos = pos;
+        this.capturedBy = new ArrayList<>();
     }
 
     /**
@@ -59,6 +63,15 @@ public abstract class Symbol implements Comparable<Symbol> {
         return false;
     }
 
+    public void addCapturedBy(Scope scope) {
+        capturedBy.add(scope);
+    }
+
+    public List<Scope> getCapturedBy() {
+        return capturedBy;
+    }
+
+
     /**
      * Get string representation of a symbol, excluding the position.
      *
@@ -72,6 +85,7 @@ public abstract class Symbol implements Comparable<Symbol> {
     }
 
     Scope definedIn;
+    List<Scope> capturedBy;
 
     /**
      * Two symbols are compared by their positions.

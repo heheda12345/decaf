@@ -102,6 +102,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         block.returns = !block.stmts.isEmpty() && block.stmts.get(block.stmts.size() - 1).returns;
         if (!block.returns && !block.returnType.isEmpty())
             block.returnType.add(BuiltInType.VOID);
+        ctx.currentScope().captureNest(block.scope);
         // System.out.println("in visit block: ");
         // for (var t: block.returnType) {
         //     System.out.println(t);
@@ -392,9 +393,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         } else {
                             expr.setThis();
                             expr.receiver.get().symbol = ctx.currentClass();
+                            ctx.currentScope().capture(ctx.currentClass());
                         }
                     }
                     expr.symbol = symbol.get();
+                    if (expr.receiver.isEmpty())
+                        ctx.currentScope().capture(expr.symbol);
                     return;
                 }
 
@@ -417,6 +421,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     if (!expr.receiver.isPresent() && !ctx.currentMethod().isStatic()) {
                         expr.setThis();
                         expr.receiver.get().symbol = ctx.currentClass();
+                        ctx.currentScope().capture(ctx.currentClass());
                     }
                     return;
                 }
@@ -425,6 +430,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     // maybe should check as method?
                     // System.out.println("typer: find lambda symbol " + symbol.get().name + symbol.get().type);
                     expr.symbol = symbol.get();
+                    ctx.currentScope().capture(expr.symbol);
                     return;
                     // expr.accept(this, ctx);
                 }   
@@ -592,6 +598,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             lambda.ret.accept(this, ctx);
             ty = new FunType(expr.symbol.type, ((FunType)lambda.symbol.type).argTypes);
             ctx.close();
+            ctx.currentScope().captureNest(lambda.scope.nestedLocalScope());
         } else {
             Tree.Block blk = (Tree.Block) lambda.ret;
             blk.accept(this, ctx);
@@ -603,7 +610,9 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         lambda.symbol = new LambdaSymbol(old.name, ty, old.scope, old.pos);
         old.scope.setOwner((LambdaSymbol)lambda.symbol);
         ctx.updateSymbol(lambda.name, lambda.symbol);
+        // System.out.println("capture-" + lambda.name + " " + ctx.currentScope().getCapturedName());
         ctx.close();
+        ctx.currentScope().captureNest(lambda.scope);
     }
 
     // pos is null when called in infer, then do not throw error

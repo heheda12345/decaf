@@ -73,7 +73,33 @@ public abstract class Scope implements Iterable<Symbol> {
         symbol.setDomain(this);
     }
 
+    public void capture(Symbol symbol) {
+        // System.out.println("try capture " + symbol.name);
+        if (!symbols.containsKey(symbol.name)) {
+            captured.put(symbol.name, symbol);
+            symbol.addCapturedBy(this);
+            // System.out.println("capture!");
+        }
+    }
+    
+    public void captureNest(Scope scope) {
+        for (var s: scope.captured.values()) {
+            capture(s);
+        }
+    }
+
+    public Collection<String> getCapturedName() {
+        return captured.keySet();
+    }
+
+    public Collection<Symbol> getCapturedSymbol() {
+        return captured.values();
+    }
+
     public void update(String key, Symbol symbol) {
+        for (var s: symbols.get(key).getCapturedBy()) {
+            s.capture(symbol);
+        }
         symbols.put(key, symbol);
     }
 
@@ -119,4 +145,5 @@ public abstract class Scope implements Iterable<Symbol> {
     public Optional<Symbol> lambdaDef;
 
     protected Map<String, Symbol> symbols = new TreeMap<>();
+    protected Map<String, Symbol> captured = new TreeMap<>();
 }
