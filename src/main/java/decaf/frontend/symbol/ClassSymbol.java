@@ -16,7 +16,7 @@ public final class ClassSymbol extends Symbol {
 
     public final Optional<ClassSymbol> parentSymbol;
 
-    public final ClassType type;
+    public ClassType type;
 
     /**
      * Associated class scope of this class.

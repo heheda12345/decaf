@@ -1,10 +1,13 @@
 package decaf.frontend.tacgen;
 
+import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Visitor;
+import decaf.frontend.tree.Tree.Lambda;
 import decaf.frontend.tree.Tree.VarSel;
+import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.FunType;
 import decaf.lowlevel.instr.Temp;
@@ -260,12 +263,73 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
     }
 
     @Override
+    default void visitLambda(Lambda lambda, FuncVisitor mv) {
+        // System.out.println("capture-" + lambda.name + " " + lambda.scope.getCapturedName());
+        var capturedExpr = lambda.scope.getCapturedExpr();
+        int totCap = capturedExpr.size();
+        assert(lambda.symbol.isLambdaSymbol());
+        var symbol = (LambdaSymbol) lambda.symbol;
+        int numArgs = symbol.type.arity();
+        var mvFunc = mv.freshFunc(lambda.name, numArgs + 1);
+        var funcObj = mvFunc.getArgTemp(0);
+        // parameter
+        int cnt = 0;
+        for (var param : lambda.params) {
+            param.symbol.temp = mvFunc.getArgTemp(cnt + 1);
+            cnt++;
+        }
+
+        // parse the lambda
+        var oldVal = new ArrayList<Temp>();
+        cnt = 4;
+        for (var expr: capturedExpr) {
+            oldVal.add(expr.val);
+            expr.val = mvFunc.visitLoadFrom(funcObj, cnt);
+            if (expr.symbol.isClassSymbol()) {
+                mvFunc.thisAt = cnt;
+                // System.out.println("[lambda] this is at " + (cnt >> 2));
+            }
+            cnt += 4;
+        }
+        // System.out.println("oldVal " +oldVal);
+        lambda.ret.accept(this, mvFunc);
+        if (lambda.ty == LambdaType.EXPR) {
+            Tree.Expr expr = (Tree.Expr) lambda.ret;
+            mvFunc.visitReturn(expr.val);
+        }
+        mvFunc.visitEnd();
+        cnt = 0;
+        for (var expr: capturedExpr) {
+            expr.val = oldVal.get(cnt);
+            cnt++;
+        }
+        // translate the function variable
+        var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
+        var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, mv.visitLoad((totCap + 1) * 4));
+        mv.visitStoreTo(a, 0, funcPointer);
+        cnt = 4;
+        for (var expr: lambda.scope.getCapturedExpr()) {
+            if (expr.symbol.isClassSymbol()) {
+                mv.visitStoreTo(a, cnt, getThisTemp(mv));
+            } else {
+                assert(expr.symbol.isVarSymbol());
+                mv.visitStoreTo(a, cnt, ((VarSymbol)expr.symbol).temp);
+            }
+            cnt += 4;
+        }
+        lambda.val = a;
+    }
+
+    @Override
     default void visitVarSel(Tree.VarSel expr, FuncVisitor mv) {
         // System.out.println("visitVarSel " + expr.pos + expr.symbol.getClass() + " " + expr.symbol.type);
         if (expr.symbol.isMethodSymbol()) {
             var symbol = (MethodSymbol) expr.symbol;
             assert(expr.name.isPresent());
             int numArgs = symbol.type.arity();
+            if (expr.receiver.isPresent()) {
+                expr.receiver.get().accept(this, mv);
+            }
             if (symbol.isStatic()) {
                 // translate the new function
                 var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
@@ -284,8 +348,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
                 // translate the function variable
                 var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
-                var eight = mv.visitLoad(4);
-                var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
+                var four = mv.visitLoad(4);
+                var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, four);
                 mv.visitStoreTo(a, 0, funcPointer);
                 expr.val = a;
             } else {
@@ -311,9 +375,12 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 var eight = mv.visitLoad(8);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
                 mv.visitStoreTo(a, 0, funcPointer);
-                mv.visitStoreTo(a, 4, mv.getArgTemp(0));
+                assert(expr.receiver.isPresent());
+                mv.visitStoreTo(a, 4, expr.receiver.get().val);
                 expr.val = a;
             }
+        } else if (expr.symbol.isClassSymbol()) {
+            return;
         } else {
             assert(expr.symbol instanceof VarSymbol);
             assert(expr.name.isPresent());
@@ -349,7 +416,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitThis(Tree.This expr, FuncVisitor mv) {
-        expr.val = mv.getArgTemp(0);
+        expr.val = getThisTemp(mv);
     }
 
     @Override
@@ -366,7 +433,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         expr.args.forEach(arg -> temps.add(arg.val));
 
         // System.out.println("visitCall " + expr.pos + " " + expr.caller.symbol.getClass());
-        if (expr.caller.symbol.isMethodSymbol()) {
+        if (expr.caller.symbol.isMethodSymbol() || expr.caller.symbol.isLambdaSymbol()) {
             var symbol = (MethodSymbol)expr.caller.symbol;
             if (symbol.isStatic()) {
                 if (symbol.type.returnType.isVoidType()) {
@@ -692,5 +759,10 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         mv.visitLabel(exit);
 
         return ret;
+    }
+
+    private Temp getThisTemp(FuncVisitor mv) {
+        return mv.thisAt > 0 ?
+            mv.visitLoadFrom(mv.getArgTemp(0), mv.thisAt) : mv.getArgTemp(0);
     }
 }

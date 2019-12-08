@@ -116,6 +116,21 @@ public class ScopeStack {
             while (!scopeStack.isEmpty()) {
                 scopeStack.pop();
             }
+        } else if (scope.isFormalScope() || scope.isLambdaScope()) {
+            ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
+            while (iter.hasPrevious()) {
+                var s = iter.previous();
+                if (s.isFormalScope()) {
+                    var formalScope = (FormalScope) s;
+                    currMethod = formalScope.getOwner();
+                    currFun = formalScope.getOwner();
+                    break;
+                } else if (s.isLambdaScope()) {
+                    var lambdaScope = (LambdaScope) s;
+                    currFun = lambdaScope.getOwner();
+                    break;
+                }
+            }
         }
     }
 

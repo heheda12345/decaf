@@ -224,7 +224,6 @@ public class FuncVisitor {
     }
 
     public Temp visitExtendCall(Temp object, List<Temp> args, boolean needReturn) {
-        System.out.println("need return " + needReturn);
         Temp temp = null;
         var entry = visitLoadFrom(object);
         entry = visitLoadFrom(entry, 0);
@@ -458,6 +457,8 @@ public class FuncVisitor {
             argsTemps[i] = freshTemp();
         }
     }
+
+    public int thisAt = 0;
 
     private TacFunc func;
 

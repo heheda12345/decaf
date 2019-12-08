@@ -23,7 +23,7 @@ public abstract class Symbol implements Comparable<Symbol> {
 
     public final String name;
 
-    public final Type type;
+    public Type type;
 
     public final Pos pos;
 
@@ -31,7 +31,6 @@ public abstract class Symbol implements Comparable<Symbol> {
         this.name = name;
         this.type = type;
         this.pos = pos;
-        this.capturedBy = new ArrayList<>();
     }
 
     /**
@@ -63,14 +62,6 @@ public abstract class Symbol implements Comparable<Symbol> {
         return false;
     }
 
-    public void addCapturedBy(Scope scope) {
-        capturedBy.add(scope);
-    }
-
-    public List<Scope> getCapturedBy() {
-        return capturedBy;
-    }
-
 
     /**
      * Get string representation of a symbol, excluding the position.
@@ -85,7 +76,6 @@ public abstract class Symbol implements Comparable<Symbol> {
     }
 
     Scope definedIn;
-    List<Scope> capturedBy;
 
     /**
      * Two symbols are compared by their positions.

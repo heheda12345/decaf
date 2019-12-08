@@ -393,12 +393,12 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                         } else {
                             expr.setThis();
                             expr.receiver.get().symbol = ctx.currentClass();
-                            ctx.currentScope().capture(ctx.currentClass());
+                            ctx.currentScope().capture(expr.receiver.get());
                         }
                     }
                     expr.symbol = symbol.get();
                     if (expr.receiver.isEmpty())
-                        ctx.currentScope().capture(expr.symbol);
+                        ctx.currentScope().capture(expr);
                     return;
                 }
 
@@ -421,7 +421,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     if (!expr.receiver.isPresent() && !ctx.currentMethod().isStatic()) {
                         expr.setThis();
                         expr.receiver.get().symbol = ctx.currentClass();
-                        ctx.currentScope().capture(ctx.currentClass());
+                        ctx.currentScope().capture(expr.receiver.get());
                     }
                     return;
                 }
@@ -430,7 +430,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                     // maybe should check as method?
                     // System.out.println("typer: find lambda symbol " + symbol.get().name + symbol.get().type);
                     expr.symbol = symbol.get();
-                    ctx.currentScope().capture(expr.symbol);
+                    ctx.currentScope().capture(expr);
                     return;
                     // expr.accept(this, ctx);
                 }   
@@ -606,11 +606,8 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             // System.out.println("infered:" + infer);
             ty = new FunType(infer, ((FunType)lambda.symbol.type).argTypes);
         }
-        LambdaSymbol old = (LambdaSymbol) lambda.symbol;
-        lambda.symbol = new LambdaSymbol(old.name, ty, old.scope, old.pos);
-        old.scope.setOwner((LambdaSymbol)lambda.symbol);
-        ctx.updateSymbol(lambda.name, lambda.symbol);
-        // System.out.println("capture-" + lambda.name + " " + ctx.currentScope().getCapturedName());
+        ((LambdaSymbol)lambda.symbol).type = ty;
+        lambda.symbol.type = ty;
         ctx.close();
         ctx.currentScope().captureNest(lambda.scope);
     }
@@ -795,10 +792,7 @@ public class Typer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
                 issue(new BadVarTypeError(stmt.pos, stmt.name));
                 rt = BuiltInType.ERROR;
             }
-            VarSymbol ns = new VarSymbol(stmt.symbol.name, rt, stmt.symbol.pos);
-            ns.setDomain(stmt.symbol.domain());
-            stmt.symbol = ns;
-            ctx.updateSymbol(stmt.symbol.name, ns);
+            stmt.symbol.type = rt;
             lt = rt;
         }
 

@@ -1,6 +1,7 @@
 package decaf.frontend.scope;
 
 import decaf.frontend.symbol.Symbol;
+import decaf.frontend.tree.Tree.Expr;
 
 import java.util.*;
 
@@ -73,12 +74,9 @@ public abstract class Scope implements Iterable<Symbol> {
         symbol.setDomain(this);
     }
 
-    public void capture(Symbol symbol) {
-        // System.out.println("try capture " + symbol.name);
-        if (!symbols.containsKey(symbol.name)) {
-            captured.put(symbol.name, symbol);
-            symbol.addCapturedBy(this);
-            // System.out.println("capture!");
+    public void capture(Expr expr) {
+        if (!symbols.containsKey(expr.symbol.name)) {
+            captured.put(expr.symbol.name, expr);
         }
     }
     
@@ -92,14 +90,11 @@ public abstract class Scope implements Iterable<Symbol> {
         return captured.keySet();
     }
 
-    public Collection<Symbol> getCapturedSymbol() {
+    public Collection<Expr> getCapturedExpr() {
         return captured.values();
     }
 
     public void update(String key, Symbol symbol) {
-        for (var s: symbols.get(key).getCapturedBy()) {
-            s.capture(symbol);
-        }
         symbols.put(key, symbol);
     }
 
@@ -145,5 +140,5 @@ public abstract class Scope implements Iterable<Symbol> {
     public Optional<Symbol> lambdaDef;
 
     protected Map<String, Symbol> symbols = new TreeMap<>();
-    protected Map<String, Symbol> captured = new TreeMap<>();
+    protected Map<String, Expr> captured = new TreeMap<>();
 }

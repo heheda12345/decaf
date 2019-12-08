@@ -11,7 +11,7 @@ import decaf.frontend.type.FunType;
  */
 public final class MethodSymbol extends Symbol {
 
-    public final FunType type;
+    public FunType type;
 
     /**
      * Associated formal scope of the method parameters.

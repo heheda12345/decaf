@@ -11,7 +11,7 @@ import decaf.lowlevel.instr.Temp;
  */
 public final class LambdaSymbol extends Symbol {
 
-    public final FunType type;
+    public FunType type;
 
     /**
      * Associated lambda scope of the lambda parameters.

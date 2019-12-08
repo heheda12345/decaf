@@ -1576,8 +1576,6 @@ public abstract class Tree {
         public TreeNode ret;
         public enum LambdaType {EXPR, BLOCK};
         public final LambdaType ty;
-        public Expr expr;
-        public Block block;
         public String name;
         public LambdaScope scope;
 
@@ -1587,10 +1585,8 @@ public abstract class Tree {
             this.ret = ret;
             if (ret instanceof Block) {
                 ty = LambdaType.BLOCK;
-                this.block = (Block)ret;
             } else {
                 ty = LambdaType.EXPR;
-                this.expr = (Expr)ret;
             }
             this.name = "lambda@"+pos.toString();
         }
