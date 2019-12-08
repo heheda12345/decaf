@@ -71,8 +71,4 @@ public final class VarSymbol extends Symbol {
         return " VarSymbol ";
     }
 
-    /**
-     * Temp, reserved for {@link decaf.frontend.tacgen.TacGen}.
-     */
-    public Temp temp;
 }
