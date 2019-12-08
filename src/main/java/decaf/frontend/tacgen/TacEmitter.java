@@ -303,10 +303,10 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             expr.symbol.temp = oldVal.get(cnt);
             cnt++;
         }
-        // translate the function variable
-        var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
-        funcPointer = mv.visitLoadFrom(funcPointer, 0);
-        funcPointer = mv.visitLoadFrom(funcPointer, 8);
+
+        var addr = mv.visitLoadVTable(mvFunc.funcLabel.clazz);
+        var funcPointer = mv.visitLoadFrom(addr, 8);
+
         var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, mv.visitLoad((totCap + 1) * 4));
         mv.visitStoreTo(a, 0, funcPointer);
         cnt = 4;
