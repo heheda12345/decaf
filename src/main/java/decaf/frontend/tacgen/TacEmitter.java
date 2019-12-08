@@ -437,7 +437,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         expr.args.forEach(arg -> temps.add(arg.symbol.temp));
 
         // System.out.println("visitCall " + expr.pos + " " + expr.caller.symbol.getClass());
-        if (expr.caller.symbol.isMethodSymbol() || expr.caller.symbol.isLambdaSymbol()) {
+        if (expr.caller.symbol.isMethodSymbol()) {
             var symbol = (MethodSymbol)expr.caller.symbol;
             if (symbol.isStatic()) {
                 if (symbol.type.returnType.isVoidType()) {
