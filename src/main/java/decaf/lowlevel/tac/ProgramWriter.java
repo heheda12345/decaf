@@ -19,6 +19,9 @@ public class ProgramWriter {
         for (var clazz : classes) {
             this.classes.put(clazz.name, clazz);
         }
+
+        var vtbl = new VTable("(*^▽^*)", Optional.empty());
+        ctx.putVTable(vtbl);
     }
 
     /**
@@ -70,6 +73,13 @@ public class ProgramWriter {
      * @return TAC program
      */
     public TacProg visitEnd() {
+        var clazz = new ClassInfo("(*^▽^*)", Optional.empty(), new HashSet<>(), ctx.newFuncs, new HashSet<>(), false);
+        ctx.putConstructorLabel(clazz.name);
+        for (var s: ctx.newFuncs)
+            ctx.putFuncLabel(clazz.name, s);
+        
+        buildVTableFor(clazz);
+        createConstructorFor(clazz.name);
         return new TacProg(ctx.getVTables(), ctx.funcs);
     }
 
@@ -166,20 +176,11 @@ public class ProgramWriter {
         }
 
         FuncLabel freshVtableFunc(String funcName) {
-            var className = "@@" + funcName + "_" + 
+            var name = "@@" + funcName + "_" + 
             nextFuncId;
             nextFuncId++;
-            var memberMethods = new HashSet<String>();
-            memberMethods.add(funcName);
-
-            var clazz = new ClassInfo(className, Optional.empty(), new HashSet<>(), memberMethods, new HashSet<>(), false);
-            ctx.putConstructorLabel(clazz.name);
-            ctx.putFuncLabel(clazz.name, funcName);
-            
-            buildVTableFor(clazz);
-            createConstructorFor(clazz.name);
-
-            return new FuncLabel(className, funcName);
+            newFuncs.add(name);
+            return new FuncLabel("(*^▽^*)", name, newFuncs.size() * 4 + 4);
         }
 
         Label freshLabel() {
@@ -193,7 +194,7 @@ public class ProgramWriter {
         }
 
         boolean hasVTable(String clazz) {
-            return vtables.containsKey(clazz);
+            return vtables.containsKey(clazz) && !clazz.equals("(*^▽^*)");
         }
 
         void putVTable(VTable vtbl) {
@@ -234,5 +235,7 @@ public class ProgramWriter {
 
         private int nextTempLabelId = 1;
         private int nextFuncId = 1;
+
+        private LinkedHashSet<String> newFuncs = new LinkedHashSet<>();
     }
 }

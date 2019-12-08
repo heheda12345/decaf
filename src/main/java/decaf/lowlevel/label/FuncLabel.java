@@ -14,10 +14,20 @@ public class FuncLabel extends Label {
      */
     public final String method;
 
+    public final int posInVtbl; // for generated function
+
     public FuncLabel(String clazz, String method) {
         super(Kind.FUNC, String.format("_L_%s_%s", clazz, method));
         this.clazz = clazz;
         this.method = method;
+        this.posInVtbl = -1;
+    }
+
+    public FuncLabel(String clazz, String method, int id) {
+        super(Kind.FUNC, String.format("_L_%s_%s", clazz, method));
+        this.clazz = clazz;
+        this.method = method;
+        this.posInVtbl = id;
     }
 
     @Override
@@ -34,6 +44,7 @@ public class FuncLabel extends Label {
         super(Kind.FUNC, "main");
         this.clazz = "Main";
         this.method = "main";
+        this.posInVtbl = -1;
     }
 
     /**
