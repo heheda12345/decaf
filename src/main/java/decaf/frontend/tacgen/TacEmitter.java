@@ -349,9 +349,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 mvFunc.visitEnd();
 
                 // translate the function variable
-                var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
-                funcPointer = mv.visitLoadFrom(funcPointer, 0);
-                funcPointer = mv.visitLoadFrom(funcPointer, 8);
+                var addr = mv.visitLoadVTable(mvFunc.funcLabel.clazz);
+                var funcPointer = mv.visitLoadFrom(addr, 8);
                 var four = mv.visitLoad(4);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, four);
                 mv.visitStoreTo(a, 0, funcPointer);
@@ -375,9 +374,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 mvFunc.visitEnd();
     
                 // translate the function variable
-                var funcPointer = mv.visitNewClass(mvFunc.funcLabel.clazz);
-                funcPointer = mv.visitLoadFrom(funcPointer, 0);
-                funcPointer = mv.visitLoadFrom(funcPointer, 8);
+                var addr = mv.visitLoadVTable(mvFunc.funcLabel.clazz);
+                var funcPointer = mv.visitLoadFrom(addr, 8);
                 var eight = mv.visitLoad(8);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
                 mv.visitStoreTo(a, 0, funcPointer);
