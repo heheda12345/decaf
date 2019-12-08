@@ -226,8 +226,6 @@ public class FuncVisitor {
     public Temp visitExtendCall(Temp object, List<Temp> args, boolean needReturn) {
         Temp temp = null;
         var entry = visitLoadFrom(object);
-        entry = visitLoadFrom(entry, 0);
-        entry = visitLoadFrom(entry, 8);
         func.add(new TacInstr.Parm(object));
         for (var arg : args) {
             func.add(new TacInstr.Parm(arg));
