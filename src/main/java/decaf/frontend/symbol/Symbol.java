@@ -6,6 +6,7 @@ import java.util.List;
 import decaf.frontend.scope.Scope;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.type.Type;
+import decaf.lowlevel.instr.Temp;
 
 /**
  * Symbols.
@@ -89,4 +90,9 @@ public abstract class Symbol implements Comparable<Symbol> {
     }
 
     public abstract String getSymbolType();
+    
+    /**
+     * Temp, reserved for {@link decaf.frontend.tacgen.TacGen}.
+     */
+    public Temp temp;
 }

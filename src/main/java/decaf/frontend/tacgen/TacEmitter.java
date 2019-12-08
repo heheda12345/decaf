@@ -57,7 +57,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var initVal = def.initVal.get();
 
         initVal.accept(this, mv);
-        mv.visitAssign(def.symbol.temp, initVal.val);
+        mv.visitAssign(def.symbol.temp, ((VarSymbol)initVal.symbol).temp);
     }
 
     @Override
@@ -66,9 +66,9 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             var indexSel = (Tree.IndexSel) assign.lhs;
             indexSel.array.accept(this, mv);
             indexSel.index.accept(this, mv);
-            var addr = emitArrayElementAddress(indexSel.array.val, indexSel.index.val, mv);
+            var addr = emitArrayElementAddress(((VarSymbol)indexSel.array.symbol).temp, ((VarSymbol)indexSel.index.symbol).temp, mv);
             assign.rhs.accept(this, mv);
-            mv.visitStoreTo(addr, assign.rhs.val);
+            mv.visitStoreTo(addr, ((VarSymbol)assign.rhs.symbol).temp);
         } else if (assign.lhs instanceof Tree.VarSel) {
             var v = (Tree.VarSel) assign.lhs;
             assert(v.symbol instanceof VarSymbol);
@@ -78,10 +78,10 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 object.accept(this, mv);
                 assign.rhs.accept(this, mv);
                 assert(v.name.isPresent());
-                mv.visitMemberWrite(object.val, symbol.getOwner().name, v.name.get(), assign.rhs.val);
+                mv.visitMemberWrite(((VarSymbol)object.symbol).temp, symbol.getOwner().name, v.name.get(), ((VarSymbol)assign.rhs.symbol).temp);
             } else { // local or param
                 assign.rhs.accept(this, mv);
-                mv.visitAssign(symbol.temp, assign.rhs.val);
+                mv.visitAssign(symbol.temp, ((VarSymbol)assign.rhs.symbol).temp);
             }
         }
     }
@@ -97,10 +97,10 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         Consumer<FuncVisitor> trueBranch = v -> stmt.trueBranch.accept(this, v);
 
         if (stmt.falseBranch.isEmpty()) {
-            emitIfThen(stmt.cond.val, trueBranch, mv);
+            emitIfThen(((VarSymbol)stmt.cond.symbol).temp, trueBranch, mv);
         } else {
             Consumer<FuncVisitor> falseBranch = v -> stmt.falseBranch.get().accept(this, v);
-            emitIfThenElse(stmt.cond.val, trueBranch, falseBranch, mv);
+            emitIfThenElse(((VarSymbol)stmt.cond.symbol).temp, trueBranch, falseBranch, mv);
         }
     }
 
@@ -109,7 +109,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var exit = mv.freshLabel();
         Function<FuncVisitor, Temp> test = v -> {
             loop.cond.accept(this, v);
-            return loop.cond.val;
+            return ((VarSymbol)loop.cond.symbol).temp;
         };
         Consumer<FuncVisitor> body = v -> {
             loopExits.push(exit);
@@ -125,7 +125,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         loop.init.accept(this, mv);
         Function<FuncVisitor, Temp> test = v -> {
             loop.cond.accept(this, v);
-            return loop.cond.val;
+            return ((VarSymbol)loop.cond.symbol).temp;
         };
         Consumer<FuncVisitor> body = v -> {
             loopExits.push(exit);
@@ -148,7 +148,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         } else {
             var expr = stmt.expr.get();
             expr.accept(this, mv);
-            mv.visitReturn(expr.val);
+            mv.visitReturn(((VarSymbol)expr.symbol).temp);
         }
     }
 
@@ -157,11 +157,11 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         for (var expr : stmt.exprs) {
             expr.accept(this, mv);
             if (expr.symbol.type.eq(BuiltInType.INT)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_INT, expr.val);
+                mv.visitIntrinsicCall(Intrinsic.PRINT_INT, ((VarSymbol)expr.symbol).temp);
             } else if (expr.symbol.type.eq(BuiltInType.BOOL)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_BOOL, expr.val);
+                mv.visitIntrinsicCall(Intrinsic.PRINT_BOOL, ((VarSymbol)expr.symbol).temp);
             } else if (expr.symbol.type.eq(BuiltInType.STRING)) {
-                mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, expr.val);
+                mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, ((VarSymbol)expr.symbol).temp);
             }
         }
     }
@@ -170,12 +170,12 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
 
     @Override
     default void visitIntLit(Tree.IntLit expr, FuncVisitor mv) {
-        expr.val = mv.visitLoad(expr.value);
+        ((VarSymbol)expr.symbol).temp = mv.visitLoad(expr.value);
     }
 
     @Override
     default void visitBoolLit(Tree.BoolLit expr, FuncVisitor mv) {
-        expr.val = mv.visitLoad(expr.value);
+        ((VarSymbol)expr.symbol).temp = mv.visitLoad(expr.value);
     }
 
     @Override
@@ -187,22 +187,22 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 .replaceAll("\\\\t", "\t")
                 .replaceAll("\\\\\\\\", "\\")
                 .replaceAll("\\\\\"", "\"");
-        expr.val = mv.visitLoad(unquoted);
+                ((VarSymbol)expr.symbol).temp = mv.visitLoad(unquoted);
     }
 
     @Override
     default void visitNullLit(Tree.NullLit expr, FuncVisitor mv) {
-        expr.val = mv.visitLoad(0);
+        ((VarSymbol)expr.symbol).temp = mv.visitLoad(0);
     }
 
     @Override
     default void visitReadInt(Tree.ReadInt expr, FuncVisitor mv) {
-        expr.val = mv.visitIntrinsicCall(Intrinsic.READ_INT, true);
+        ((VarSymbol)expr.symbol).temp = mv.visitIntrinsicCall(Intrinsic.READ_INT, true);
     }
 
     @Override
     default void visitReadLine(Tree.ReadLine expr, FuncVisitor mv) {
-        expr.val = mv.visitIntrinsicCall(Intrinsic.READ_LINE, true);
+        ((VarSymbol)expr.symbol).temp = mv.visitIntrinsicCall(Intrinsic.READ_LINE, true);
     }
 
     @Override
@@ -213,7 +213,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         };
 
         expr.operand.accept(this, mv);
-        expr.val = mv.visitUnary(op, expr.operand.val);
+        ((VarSymbol)expr.symbol).temp = mv.visitUnary(op, ((VarSymbol)expr.operand.symbol).temp);
     }
 
     @Override
@@ -222,9 +222,9 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 expr.lhs.symbol.type.eq(BuiltInType.STRING)) { // string eq/ne
             expr.lhs.accept(this, mv);
             expr.rhs.accept(this, mv);
-            expr.val = mv.visitIntrinsicCall(Intrinsic.STRING_EQUAL, true, expr.lhs.val, expr.rhs.val);
+            ((VarSymbol)expr.symbol).temp = mv.visitIntrinsicCall(Intrinsic.STRING_EQUAL, true, ((VarSymbol)expr.lhs.symbol).temp, ((VarSymbol)expr.rhs.symbol).temp);
             if (expr.op.equals(Tree.BinaryOp.NE)) {
-                mv.visitUnarySelf(TacInstr.Unary.Op.LNOT, expr.val);
+                mv.visitUnarySelf(TacInstr.Unary.Op.LNOT, ((VarSymbol)expr.symbol).temp);
             }
             return;
         }
@@ -248,7 +248,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         expr.rhs.accept(this, mv);
         if (op ==  TacInstr.Binary.Op.DIV || op == TacInstr.Binary.Op.MOD) {
             var zero = mv.visitLoad(0);
-            var error = mv.visitBinary(TacInstr.Binary.Op.EQU, expr.rhs.val, zero);
+            var error = mv.visitBinary(TacInstr.Binary.Op.EQU, ((VarSymbol)expr.rhs.symbol).temp, zero);
             var handler = new Consumer<FuncVisitor>() {
                 @Override
                 public void accept(FuncVisitor v) {
@@ -259,7 +259,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             emitIfThen(error, handler, mv);
         }
         
-        expr.val = mv.visitBinary(op, expr.lhs.val, expr.rhs.val);
+        ((VarSymbol)expr.symbol).temp = mv.visitBinary(op, ((VarSymbol)expr.lhs.symbol).temp, ((VarSymbol)expr.rhs.symbol).temp);
     }
 
     @Override
@@ -283,8 +283,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var oldVal = new ArrayList<Temp>();
         cnt = 4;
         for (var expr: capturedExpr) {
-            oldVal.add(expr.val);
-            expr.val = mvFunc.visitLoadFrom(funcObj, cnt);
+            oldVal.add(((VarSymbol)expr.symbol).temp);
+            ((VarSymbol)expr.symbol).temp = mvFunc.visitLoadFrom(funcObj, cnt);
             if (expr.symbol.isClassSymbol()) {
                 mvFunc.thisAt = cnt;
                 // System.out.println("[lambda] this is at " + (cnt >> 2));
@@ -295,12 +295,12 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         lambda.ret.accept(this, mvFunc);
         if (lambda.ty == LambdaType.EXPR) {
             Tree.Expr expr = (Tree.Expr) lambda.ret;
-            mvFunc.visitReturn(expr.val);
+            mvFunc.visitReturn(((VarSymbol)expr.symbol).temp);
         }
         mvFunc.visitEnd();
         cnt = 0;
         for (var expr: capturedExpr) {
-            expr.val = oldVal.get(cnt);
+            ((VarSymbol)expr.symbol).temp = oldVal.get(cnt);
             cnt++;
         }
         // translate the function variable
@@ -317,7 +317,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             }
             cnt += 4;
         }
-        lambda.val = a;
+        ((LambdaSymbol)lambda.symbol).temp = a;
     }
 
     @Override
@@ -351,7 +351,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 var four = mv.visitLoad(4);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, four);
                 mv.visitStoreTo(a, 0, funcPointer);
-                expr.val = a;
+                expr.symbol.temp = a;
             } else {
                 // translate the new function
                 var mvFunc = mv.freshFunc(expr.name.get(), numArgs + 1);
@@ -376,8 +376,8 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);
                 mv.visitStoreTo(a, 0, funcPointer);
                 assert(expr.receiver.isPresent());
-                mv.visitStoreTo(a, 4, expr.receiver.get().val);
-                expr.val = a;
+                mv.visitStoreTo(a, 4, ((VarSymbol)expr.receiver.get().symbol).temp);
+                expr.symbol.temp = a;
             }
         } else if (expr.symbol.isClassSymbol()) {
             return;
@@ -388,9 +388,9 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             if (symbol.isMemberVar()) {
                 var object = expr.receiver.get();
                 object.accept(this, mv);
-                expr.val = mv.visitMemberAccess(object.val, symbol.getOwner().name, expr.name.get());
+                expr.symbol.temp = mv.visitMemberAccess(((VarSymbol)object.symbol).temp, symbol.getOwner().name, expr.name.get());
             } else { // local or param
-                expr.val = symbol.temp;
+                expr.symbol.temp = symbol.temp;
             }
         }
     }
@@ -399,24 +399,24 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
     default void visitIndexSel(Tree.IndexSel expr, FuncVisitor mv) {
         expr.array.accept(this, mv);
         expr.index.accept(this, mv);
-        var addr = emitArrayElementAddress(expr.array.val, expr.index.val, mv);
-        expr.val = mv.visitLoadFrom(addr);
+        var addr = emitArrayElementAddress(((VarSymbol)expr.array.symbol).temp, ((VarSymbol)expr.index.symbol).temp, mv);
+        ((VarSymbol)expr.symbol).temp = mv.visitLoadFrom(addr);
     }
 
     @Override
     default void visitNewArray(Tree.NewArray expr, FuncVisitor mv) {
         expr.length.accept(this, mv);
-        expr.val = emitArrayInit(expr.length.val, mv);
+        ((VarSymbol)expr.symbol).temp = emitArrayInit(((VarSymbol)expr.length.symbol).temp, mv);
     }
 
     @Override
     default void visitNewClass(Tree.NewClass expr, FuncVisitor mv) {
-        expr.val = mv.visitNewClass(expr.symbol.name);
+        ((VarSymbol)expr.symbol).temp = mv.visitNewClass(expr.symbol.name);
     }
 
     @Override
     default void visitThis(Tree.This expr, FuncVisitor mv) {
-        expr.val = getThisTemp(mv);
+        ((VarSymbol)expr.symbol).temp = getThisTemp(mv);
     }
 
     @Override
@@ -424,13 +424,13 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         if (expr.isArrayLength) { // special case for array.length()
             var array = ((VarSel)expr.caller).receiver.get();
             array.accept(this, mv);
-            expr.val = mv.visitLoadFrom(array.val, -4);
+            ((VarSymbol)expr.symbol).temp = mv.visitLoadFrom(((VarSymbol)array.symbol).temp, -4);
             return;
         }
 
         expr.args.forEach(arg -> arg.accept(this, mv));
         var temps = new ArrayList<Temp>();
-        expr.args.forEach(arg -> temps.add(arg.val));
+        expr.args.forEach(arg -> temps.add(((VarSymbol)arg.symbol).temp));
 
         // System.out.println("visitCall " + expr.pos + " " + expr.caller.symbol.getClass());
         if (expr.caller.symbol.isMethodSymbol() || expr.caller.symbol.isLambdaSymbol()) {
@@ -439,16 +439,16 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 if (symbol.type.returnType.isVoidType()) {
                     mv.visitStaticCall(symbol.owner.name, symbol.name, temps);
                 } else {
-                    expr.val = mv.visitStaticCall(symbol.owner.name, symbol.name, temps, true);
+                    ((VarSymbol)expr.symbol).temp = mv.visitStaticCall(symbol.owner.name, symbol.name, temps, true);
                 }
             } else {
                 assert(((VarSel)expr.caller).receiver.isPresent());
                 var object = ((VarSel)expr.caller).receiver.get();
                 object.accept(this, mv);
                 if (symbol.type.returnType.isVoidType()) {
-                    mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps);
+                    mv.visitMemberCall(((VarSymbol)object.symbol).temp, symbol.owner.name, symbol.name, temps);
                 } else {
-                    expr.val = mv.visitMemberCall(object.val, symbol.owner.name, symbol.name, temps, true);
+                    ((VarSymbol)expr.symbol).temp = mv.visitMemberCall(((VarSymbol)object.symbol).temp, symbol.owner.name, symbol.name, temps, true);
                 }
             }
         } else {
@@ -456,9 +456,9 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             assert(expr.caller.symbol.type.isFuncType());
             expr.caller.accept(this, mv);
             if (((FunType)expr.caller.symbol.type).returnType.isVoidType()) {
-                mv.visitExtendCall(expr.caller.val, temps);
+                mv.visitExtendCall(((VarSymbol)expr.caller.symbol).temp, temps);
             } else {
-                expr.val = mv.visitExtendCall(expr.caller.val, temps, true);
+                ((VarSymbol)expr.symbol).temp = mv.visitExtendCall(((VarSymbol)expr.caller.symbol).temp, temps, true);
             }
         }
     }
@@ -467,24 +467,24 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
     default void visitClassTest(Tree.ClassTest expr, FuncVisitor mv) {
         // Accelerate: when obj.type <: class.type, then the test must be successful!
         if (expr.obj.symbol.type.subtypeOf(expr.symbol.type)) {
-            expr.val = mv.visitLoad(1);
+            ((VarSymbol)expr.symbol).temp = mv.visitLoad(1);
             return;
         }
 
         expr.obj.accept(this, mv);
-        expr.val = emitClassTest(expr.obj.val, expr.symbol.name, mv);
+        ((VarSymbol)expr.symbol).temp = emitClassTest(((VarSymbol)expr.obj.symbol).temp, expr.symbol.name, mv);
     }
 
     @Override
     default void visitClassCast(Tree.ClassCast expr, FuncVisitor mv) {
         expr.obj.accept(this, mv);
-        expr.val = expr.obj.val;
+        ((VarSymbol)expr.symbol).temp = ((VarSymbol)expr.obj.symbol).temp;
 
         // Accelerate: when obj.type <: class.type, then the test must success!
         if (expr.obj.symbol.type.subtypeOf(expr.symbol.type)) {
             return;
         }
-        var result = emitClassTest(expr.obj.val, expr.symbol.name, mv);
+        var result = emitClassTest(((VarSymbol)expr.obj.symbol).temp, expr.symbol.name, mv);
 
         /* Pseudo code:
          * <pre>
@@ -505,7 +505,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         var exit = mv.freshLabel();
         mv.visitBranch(TacInstr.CondBranch.Op.BNEZ, result, exit);
         mv.visitPrint(RuntimeError.CLASS_CAST_ERROR1);
-        var vtbl1 = mv.visitLoadFrom(expr.obj.val);
+        var vtbl1 = mv.visitLoadFrom(((VarSymbol)expr.obj.symbol).temp);
         var fromClass = mv.visitLoadFrom(vtbl1, 4);
         mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, fromClass);
         mv.visitPrint(RuntimeError.CLASS_CAST_ERROR2);

@@ -61,6 +61,4 @@ public final class LambdaSymbol extends Symbol {
     public String getSymbolType() {
         return " LambdaSymbol ";
     }
-
-    public Temp temp;
 }

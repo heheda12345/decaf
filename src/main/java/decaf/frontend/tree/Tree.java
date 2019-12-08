@@ -981,7 +981,7 @@ public abstract class Tree {
     public abstract static class Expr extends TreeNode {
         // type is in symbol
         // For tac gen
-        public Temp val;
+        // public Temp val;
         public Optional<String> name;
         public Symbol symbol;
         public boolean isArrayLength;
