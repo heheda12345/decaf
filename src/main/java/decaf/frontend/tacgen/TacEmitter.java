@@ -304,7 +304,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
             cnt++;
         }
 
-        var addr = mv.visitLoadVTable("(*^▽^*)");
+        var addr = mv.visitLoadVTable("(*^v^*)");
         var funcPointer = mv.visitLoadFrom(addr, mvFunc.funcLabel.posInVtbl);
 
         var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, mv.visitLoad((totCap + 1) * 4));
@@ -349,7 +349,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 mvFunc.visitEnd();
 
                 // translate the function variable
-                var addr = mv.visitLoadVTable("(*^▽^*)");
+                var addr = mv.visitLoadVTable("(*^v^*)");
                 var funcPointer = mv.visitLoadFrom(addr, mvFunc.funcLabel.posInVtbl);
                 var four = mv.visitLoad(4);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, four);
@@ -374,7 +374,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
                 mvFunc.visitEnd();
     
                 // translate the function variable
-                var addr = mv.visitLoadVTable("(*^▽^*)");
+                var addr = mv.visitLoadVTable("(*^v^*)");
                 var funcPointer = mv.visitLoadFrom(addr, mvFunc.funcLabel.posInVtbl);
                 var eight = mv.visitLoad(8);
                 var a = mv.visitIntrinsicCall(Intrinsic.ALLOCATE, true, eight);

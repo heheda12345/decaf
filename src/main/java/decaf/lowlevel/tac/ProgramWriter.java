@@ -20,7 +20,7 @@ public class ProgramWriter {
             this.classes.put(clazz.name, clazz);
         }
 
-        var vtbl = new VTable("(*^▽^*)", Optional.empty());
+        var vtbl = new VTable("(*^v^*)", Optional.empty());
         ctx.putVTable(vtbl);
     }
 
@@ -73,7 +73,7 @@ public class ProgramWriter {
      * @return TAC program
      */
     public TacProg visitEnd() {
-        var clazz = new ClassInfo("(*^▽^*)", Optional.empty(), new HashSet<>(), ctx.newFuncs, new HashSet<>(), false);
+        var clazz = new ClassInfo("(*^v^*)", Optional.empty(), new HashSet<>(), ctx.newFuncs, new HashSet<>(), false);
         ctx.putConstructorLabel(clazz.name);
         for (var s: ctx.newFuncs)
             ctx.putFuncLabel(clazz.name, s);
@@ -180,7 +180,7 @@ public class ProgramWriter {
             nextFuncId;
             nextFuncId++;
             newFuncs.add(name);
-            return new FuncLabel("(*^▽^*)", name, newFuncs.size() * 4 + 4);
+            return new FuncLabel("(*^v^*)", name, newFuncs.size() * 4 + 4);
         }
 
         Label freshLabel() {
@@ -194,7 +194,7 @@ public class ProgramWriter {
         }
 
         boolean hasVTable(String clazz) {
-            return vtables.containsKey(clazz) && !clazz.equals("(*^▽^*)");
+            return vtables.containsKey(clazz) && !clazz.equals("(*^v^*)");
         }
 
         void putVTable(VTable vtbl) {
