@@ -108,7 +108,7 @@ public final class Simulator {
         _halt = false;
 
         while (!_call_stack.isEmpty()) {
-            if (count >= 100000) {
+            if (count >= 10000000) {
                 throw new Error("Max instruction limitation 10,0000 exceeds, maybe your program cannot terminate?");
             }
 
