@@ -7,7 +7,6 @@ import decaf.lowlevel.instr.Temp;
 import decaf.lowlevel.label.Label;
 import decaf.lowlevel.tac.FuncVisitor;
 import decaf.lowlevel.tac.Intrinsic;
-import decaf.lowlevel.tac.RuntimeError;
 import decaf.lowlevel.tac.TacInstr;
 
 import java.util.ArrayList;
@@ -340,19 +339,19 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
          * exit:
          * </pre>
          */
-        var exit = mv.freshLabel();
-        mv.visitBranch(TacInstr.CondBranch.Op.BNEZ, result, exit);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR1);
-        var vtbl1 = mv.visitLoadFrom(expr.obj.val);
-        var fromClass = mv.visitLoadFrom(vtbl1, 4);
-        mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, fromClass);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR2);
-        var vtbl2 = mv.visitLoadVTable(expr.symbol.name);
-        var toClass = mv.visitLoadFrom(vtbl2, 4);
-        mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, toClass);
-        mv.visitPrint(RuntimeError.CLASS_CAST_ERROR3);
-        mv.visitIntrinsicCall(Intrinsic.HALT);
-        mv.visitLabel(exit);
+        // var exit = mv.freshLabel();
+        // mv.visitBranch(TacInstr.CondBranch.Op.BNEZ, result, exit);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR1);
+        // var vtbl1 = mv.visitLoadFrom(expr.obj.val);
+        // var fromClass = mv.visitLoadFrom(vtbl1, 4);
+        // mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, fromClass);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR2);
+        // var vtbl2 = mv.visitLoadVTable(expr.symbol.name);
+        // var toClass = mv.visitLoadFrom(vtbl2, 4);
+        // mv.visitIntrinsicCall(Intrinsic.PRINT_STRING, toClass);
+        // mv.visitPrint(RuntimeError.CLASS_CAST_ERROR3);
+        // mv.visitIntrinsicCall(Intrinsic.HALT);
+        // mv.visitLabel(exit);
     }
 
     /**
@@ -491,15 +490,15 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
      */
     private Temp emitArrayInit(Temp length, FuncVisitor mv) {
         var zero = mv.visitLoad(0);
-        var error = mv.visitBinary(TacInstr.Binary.Op.LES, length, zero);
-        var handler = new Consumer<FuncVisitor>() {
-            @Override
-            public void accept(FuncVisitor v) {
-                v.visitPrint(RuntimeError.NEGATIVE_ARR_SIZE);
-                v.visitIntrinsicCall(Intrinsic.HALT);
-            }
-        };
-        emitIfThen(error, handler, mv);
+        // var error = mv.visitBinary(TacInstr.Binary.Op.LES, length, zero);
+        // var handler = new Consumer<FuncVisitor>() {
+        //     @Override
+        //     public void accept(FuncVisitor v) {
+        //         v.visitPrint(RuntimeError.NEGATIVE_ARR_SIZE);
+        //         v.visitIntrinsicCall(Intrinsic.HALT);
+        //     }
+        // };
+        // emitIfThen(error, handler, mv);
 
         var units = mv.visitBinary(TacInstr.Binary.Op.ADD, length, mv.visitLoad(1));
         var four = mv.visitLoad(4);
@@ -542,19 +541,19 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
      * @return a temp storing the address of the element
      */
     private Temp emitArrayElementAddress(Temp array, Temp index, FuncVisitor mv) {
-        var length = mv.visitLoadFrom(array, -4);
-        var zero = mv.visitLoad(0);
-        var error1 = mv.visitBinary(TacInstr.Binary.Op.LES, index, zero);
-        var error2 = mv.visitBinary(TacInstr.Binary.Op.GEQ, index, length);
-        var error = mv.visitBinary(TacInstr.Binary.Op.LOR, error1, error2);
-        var handler = new Consumer<FuncVisitor>() {
-            @Override
-            public void accept(FuncVisitor v) {
-                v.visitPrint(RuntimeError.ARRAY_INDEX_OUT_OF_BOUND);
-                v.visitIntrinsicCall(Intrinsic.HALT);
-            }
-        };
-        emitIfThen(error, handler, mv);
+        // var length = mv.visitLoadFrom(array, -4);
+        // var zero = mv.visitLoad(0);
+        // var error1 = mv.visitBinary(TacInstr.Binary.Op.LES, index, zero);
+        // var error2 = mv.visitBinary(TacInstr.Binary.Op.GEQ, index, length);
+        // var error = mv.visitBinary(TacInstr.Binary.Op.LOR, error1, error2);
+        // var handler = new Consumer<FuncVisitor>() {
+        //     @Override
+        //     public void accept(FuncVisitor v) {
+        //         v.visitPrint(RuntimeError.ARRAY_INDEX_OUT_OF_BOUND);
+        //         v.visitIntrinsicCall(Intrinsic.HALT);
+        //     }
+        // };
+        // emitIfThen(error, handler, mv);
 
         var four = mv.visitLoad(4);
         var offset = mv.visitBinary(TacInstr.Binary.Op.MUL, index, four);
