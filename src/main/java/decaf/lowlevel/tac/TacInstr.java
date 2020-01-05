@@ -36,6 +36,10 @@ public abstract class TacInstr extends PseudoInstr {
      */
     public abstract void accept(Visitor v);
 
+    public void removeDest() {
+        dsts = new Temp[]{};
+    }
+
     /**
      * Visitors of Tac instructions.
      */
@@ -427,8 +431,8 @@ public abstract class TacInstr extends PseudoInstr {
      * </pre>
      */
     public static class IndirectCall extends TacInstr {
-        public final Optional<Temp> dst;
-        public final Temp entry;
+        public Optional<Temp> dst;
+        public Temp entry;
 
         public IndirectCall(Temp dst, Temp entry) {
             super(new Temp[]{dst}, new Temp[]{entry});
@@ -440,6 +444,12 @@ public abstract class TacInstr extends PseudoInstr {
             super(new Temp[]{}, new Temp[]{entry});
             this.dst = Optional.empty();
             this.entry = entry;
+        }
+
+        @Override
+        public void removeDest() {
+            super.removeDest();
+            this.dst = Optional.empty();
         }
 
         @Override
@@ -463,7 +473,7 @@ public abstract class TacInstr extends PseudoInstr {
      * </pre>
      */
     public static class DirectCall extends TacInstr {
-        public final Optional<Temp> dst;
+        public Optional<Temp> dst;
         public final Label entry;
 
         public DirectCall(Temp dst, Label entry) {
@@ -488,6 +498,12 @@ public abstract class TacInstr extends PseudoInstr {
             super(new Temp[]{}, new Temp[]{});
             this.dst = Optional.empty();
             this.entry = intrinsic.entry;
+        }
+
+        @Override
+        public void removeDest() {
+            super.removeDest();
+            this.dst = Optional.empty();
         }
 
         @Override

@@ -77,7 +77,7 @@ public class Optimizer extends Phase<TacProg, TacProg> {
                                         }
                                     }
                                     if (isDead) {
-                                        loc.instr.dsts = new Temp[]{};
+                                        ((TacInstr)loc.instr).removeDest();
                                     }
                                  } 
                     }
