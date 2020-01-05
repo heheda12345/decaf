@@ -1,15 +1,16 @@
 package decaf.frontend.parsing;
 
+import decaf.driver.Config;
+import decaf.driver.Phase;
+import decaf.driver.error.DecafError;
+import decaf.frontend.tree.Tree;
+import decaf.lowlevel.log.IndentPrinter;
+import decaf.printing.PrettyTree;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
 import java.util.TreeSet;
-
-import decaf.driver.Config;
-import decaf.driver.Phase;
-import decaf.frontend.tree.Tree;
-import decaf.lowlevel.log.IndentPrinter;
-import decaf.printing.PrettyTree;
 
 /**
  * The alternative parser phase.
@@ -39,12 +40,26 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
         }
     }
 
-    boolean isFirst; // Don't raise error of the same position
+    /**
+     * To avoid issuing the same error multiple times.
+     *
+     * @param error Decaf error
+     */
+    @Override
+    public void issue(DecafError error) {
+        if (!errors.isEmpty()) {
+            var last = errors.get(errors.size() - 1);
+            if (error.toString().equals(last.toString())) { // ignore
+                return;
+            }
+        }
+
+        super.issue(error);
+    }
 
     private class Parser extends decaf.frontend.parsing.LLTable {
         @Override
         boolean parse() {
-            isFirst = true;
             var sv = parseSymbol(start, new TreeSet<>());
             if (sv == null) {
                 return false;
@@ -85,25 +100,8 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
                 case Tokens.GREATER_EQUAL -> GREATER_EQUAL;
                 case Tokens.EQUAL -> EQUAL;
                 case Tokens.NOT_EQUAL -> NOT_EQUAL;
-                case Tokens.ABSTRACT -> ABSTRACT;
-                case Tokens.VAR -> VAR;
-                case Tokens.FUN -> FUN;
-                case Tokens.ARROW -> ARROW;
                 default -> code; // single-character, use their ASCII code!
             };
-        }
-
-        protected void raiseError() {
-            if (isFirst) {
-                // System.out.println("error!");
-                yyerror("syntax error");
-                isFirst = false;
-            }
-        }
-
-        protected int myNextToken() {
-            isFirst = true;
-            return nextToken();
         }
 
         /**
@@ -116,52 +114,21 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return the parsed value of {@code symbol} if parsing succeeds, or else {@code null}.
          */
         private SemValue parseSymbol(int symbol, Set<Integer> follow) {
-            var begin = beginSet(symbol);
-            var end = new TreeSet<Integer>();
-            end.addAll(follow);
-            end.addAll(followSet(symbol));
-            boolean err = false;
-            // System.out.printf("parsing: %d(%s) token %d(%s)\n", symbol, name(symbol), token, name(token));
-            // System.out.println("begin set: " + begin);
-            // System.out.println("end set: " + end);
-            if (!begin.contains(token)) {
-                // System.out.println("error1");
-                raiseError();
-                err = true;
-                while (true) {
-                    if (begin.contains(token))
-                        break;
-                    if (end.contains(token))
-                        return null;
-                    token = myNextToken();
-                    // System.out.println("skip & read " + name(token));
-                    if (token == 0)
-                        return null;
-                }
-            }
-            var result = query(symbol, token);
+            var result = query(symbol, token); // get production by lookahead symbol
             var actionId = result.getKey(); // get user-defined action
 
             var right = result.getValue(); // right-hand side of production
-            // System.out.print(name(symbol) + "=>");
-            // for (var x: right)
-            //     System.out.print(name(x) + " ");
-            // System.out.println();
             var length = right.size();
             var params = new SemValue[length + 1];
 
             for (var i = 0; i < length; i++) { // parse right-hand side symbols one by one
                 var term = right.get(i);
                 params[i + 1] = isNonTerminal(term)
-                        ? parseSymbol(term, end) // for non terminals: recursively parse it
+                        ? parseSymbol(term, follow) // for non terminals: recursively parse it
                         : matchToken(term) // for terminals: match token
                 ;
             }
-            if (err)
-                return null;
-            for (int i = 0; i < length; i++)
-                if (params[i + 1] == null)
-                    return null;
+
             act(actionId, params); // do user-defined action
             return params[0];
         }
@@ -173,15 +140,13 @@ public class LLParser extends Phase<InputStream, Tree.TopLevel> {
          * @return sem value
          */
         private SemValue matchToken(int expected) {
-            // System.out.println("matching " + name(expected) + " " + name(token));
             SemValue self = semValue;
             if (token != expected) {
-                // System.out.println("token error");
-                raiseError();
+                yyerror("syntax error");
                 return null;
             }
 
-            token = myNextToken();
+            token = nextToken();
             return self;
         }
     }

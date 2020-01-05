@@ -11,7 +11,7 @@ import decaf.frontend.type.FunType;
  */
 public final class MethodSymbol extends Symbol {
 
-    public FunType type;
+    public final FunType type;
 
     /**
      * Associated formal scope of the method parameters.
@@ -21,17 +21,14 @@ public final class MethodSymbol extends Symbol {
     public final Tree.Modifiers modifiers;
 
     public final ClassSymbol owner;
-    
-    public final boolean isAbstract;
 
     public MethodSymbol(String name, FunType type, FormalScope scope, Pos pos, Tree.Modifiers modifiers,
-                        ClassSymbol owner, boolean isAbstract) {
+                        ClassSymbol owner) {
         super(name, type, pos);
         this.type = type;
         this.scope = scope;
         this.modifiers = modifiers;
         this.owner = owner;
-        this.isAbstract = isAbstract;
         scope.setOwner(this);
     }
 
@@ -70,11 +67,6 @@ public final class MethodSymbol extends Symbol {
 
     public boolean isStatic() {
         return modifiers.isStatic();
-    }
-
-    @Override
-    public String getSymbolType() {
-        return " MethodSymbol ";
     }
 
     private boolean main = false;

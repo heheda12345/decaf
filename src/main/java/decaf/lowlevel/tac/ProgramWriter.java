@@ -19,9 +19,6 @@ public class ProgramWriter {
         for (var clazz : classes) {
             this.classes.put(clazz.name, clazz);
         }
-
-        var vtbl = new VTable("(*^v^*)", Optional.empty());
-        ctx.putVTable(vtbl);
     }
 
     /**
@@ -73,13 +70,6 @@ public class ProgramWriter {
      * @return TAC program
      */
     public TacProg visitEnd() {
-        var clazz = new ClassInfo("(*^v^*)", Optional.empty(), new HashSet<>(), ctx.newFuncs, new HashSet<>(), false);
-        ctx.putConstructorLabel(clazz.name);
-        for (var s: ctx.newFuncs)
-            ctx.putFuncLabel(clazz.name, s);
-        
-        buildVTableFor(clazz);
-        createConstructorFor(clazz.name);
         return new TacProg(ctx.getVTables(), ctx.funcs);
     }
 
@@ -154,7 +144,6 @@ public class ProgramWriter {
 
         ctx.putVTable(vtbl);
         ctx.putOffsets(vtbl);
-        // vtbl.print();
     }
 
     class Context {
@@ -175,14 +164,6 @@ public class ProgramWriter {
             return labels.get(clazz + "." + method);
         }
 
-        FuncLabel freshVtableFunc(String funcName) {
-            var name = "@@" + funcName + "_" + 
-            nextFuncId;
-            nextFuncId++;
-            newFuncs.add(name);
-            return new FuncLabel("(*^v^*)", name, newFuncs.size() * 4 + 4);
-        }
-
         Label freshLabel() {
             var name = "_L" + nextTempLabelId;
             nextTempLabelId++;
@@ -194,7 +175,7 @@ public class ProgramWriter {
         }
 
         boolean hasVTable(String clazz) {
-            return vtables.containsKey(clazz) && !clazz.equals("(*^v^*)");
+            return vtables.containsKey(clazz);
         }
 
         void putVTable(VTable vtbl) {
@@ -234,8 +215,6 @@ public class ProgramWriter {
         List<TacFunc> funcs = new ArrayList<>();
 
         private int nextTempLabelId = 1;
-        private int nextFuncId = 1;
-
-        private LinkedHashSet<String> newFuncs = new LinkedHashSet<>();
     }
+
 }

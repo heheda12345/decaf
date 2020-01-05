@@ -5,30 +5,13 @@ import decaf.driver.Phase;
 import decaf.driver.error.*;
 import decaf.frontend.scope.*;
 import decaf.frontend.symbol.ClassSymbol;
-import decaf.frontend.symbol.LambdaSymbol;
 import decaf.frontend.symbol.MethodSymbol;
 import decaf.frontend.symbol.VarSymbol;
 import decaf.frontend.tree.Tree;
-import decaf.frontend.tree.Tree.Assign;
-import decaf.frontend.tree.Tree.Binary;
-import decaf.frontend.tree.Tree.Call;
-import decaf.frontend.tree.Tree.ClassCast;
-import decaf.frontend.tree.Tree.ClassTest;
-import decaf.frontend.tree.Tree.ExprEval;
-import decaf.frontend.tree.Tree.IndexSel;
-import decaf.frontend.tree.Tree.MethodDef;
-import decaf.frontend.tree.Tree.NewArray;
-import decaf.frontend.tree.Tree.Print;
-import decaf.frontend.tree.Tree.Return;
-import decaf.frontend.tree.Tree.TLambda;
-import decaf.frontend.tree.Tree.TVoid;
-import decaf.frontend.tree.Tree.Unary;
-import decaf.frontend.tree.Tree.Lambda.LambdaType;
 import decaf.frontend.type.BuiltInType;
 import decaf.frontend.type.ClassType;
 import decaf.frontend.type.FunType;
 import decaf.frontend.type.Type;
-
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -104,7 +87,7 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         //  static void main() { ... }
         boolean found = false;
         for (var clazz : classes.values()) {
-            if (clazz.name.equals("Main") && !clazz.isAbstract()) {
+            if (clazz.name.equals("Main")) {
                 var symbol = clazz.symbol.scope.find("main");
                 if (symbol.isPresent() && symbol.get().isMethodSymbol()) {
                     var method = (MethodSymbol) symbol.get();
@@ -175,13 +158,13 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             var base = global.getClass(clazz.parent.get().name);
             var type = new ClassType(clazz.name, base.type);
             var scope = new ClassScope(base.scope);
-            var symbol = new ClassSymbol(clazz.name, base, type, scope, clazz.pos, clazz.isAbstract());
+            var symbol = new ClassSymbol(clazz.name, base, type, scope, clazz.pos);
             global.declare(symbol);
             clazz.symbol = symbol;
         } else {
             var type = new ClassType(clazz.name);
             var scope = new ClassScope();
-            var symbol = new ClassSymbol(clazz.name, type, scope, clazz.pos, clazz.isAbstract());
+            var symbol = new ClassSymbol(clazz.name, type, scope, clazz.pos);
             global.declare(symbol);
             clazz.symbol = symbol;
         }
@@ -199,23 +182,17 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         for (var field : clazz.fields) {
             field.accept(this, ctx);
         }
-        if (!clazz.isAbstract() && clazz.symbol.scope.hasAbstract())
-            issue(new NotAbstractClassError(clazz.pos, clazz.name));
         ctx.close();
-
         clazz.resolved = true;
     }
 
     @Override
     public void visitVarDef(Tree.VarDef varDef, ScopeStack ctx) {
-        var earlier = ctx.currentScope().find(varDef.name);
+        varDef.typeLit.accept(this, ctx);
+
+        var earlier = ctx.findConflict(varDef.name);
         if (earlier.isPresent()) {
-            issue(new DeclConflictError(varDef.pos, varDef.name, earlier.get().pos));
-            return;
-        }
-        earlier = ctx.findConflict(varDef.name);
-        if (earlier.isPresent()) {
-            if (earlier.get().isVarSymbol()) {
+            if (earlier.get().isVarSymbol() && earlier.get().domain() != ctx.currentScope()) {
                 issue(new OverridingVarError(varDef.pos, varDef.name));
             } else {
                 issue(new DeclConflictError(varDef.pos, varDef.name, earlier.get().pos));
@@ -223,7 +200,6 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
             return;
         }
 
-        varDef.typeLit.accept(this, ctx);
         if (varDef.typeLit.type.eq(BuiltInType.VOID)) {
             issue(new BadVarTypeError(varDef.pos, varDef.name));
             return;
@@ -238,29 +214,22 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitMethodDef(Tree.MethodDef method, ScopeStack ctx) {
-        var earlier = ctx.currentScope().find(method.name);
-        if (earlier.isPresent()) {
-            issue(new DeclConflictError(method.pos, method.name, earlier.get().pos));
-            return;
-        }
-        earlier = ctx.findConflict(method.name);
+        var earlier = ctx.findConflict(method.name);
         if (earlier.isPresent()) {
             if (earlier.get().isMethodSymbol()) { // may be overriden
                 var suspect = (MethodSymbol) earlier.get();
-                if (!suspect.isStatic() && !method.isStatic() && !(!suspect.isAbstract && method.isAbstract())) {
+                if (suspect.domain() != ctx.currentScope() && !suspect.isStatic() && !method.isStatic()) {
                     // Only non-static methods can be overriden, but the type signature must be equivalent.
                     var formal = new FormalScope();
                     typeMethod(method, ctx, formal);
-                    if (method.type.noError() && method.type.subtypeOf(suspect.type)) { // override success
+                    if (method.type.subtypeOf(suspect.type)) { // override success
                         var symbol = new MethodSymbol(method.name, method.type, formal, method.pos, method.modifiers,
-                                ctx.currentClass(), method.isAbstract());
+                                ctx.currentClass());
                         ctx.declare(symbol);
                         method.symbol = symbol;
-                        if (method.body.isPresent()) {
-                            ctx.open(formal);
-                            method.body.get().accept(this, ctx);
-                            ctx.close();
-                        }
+                        ctx.open(formal);
+                        method.body.accept(this, ctx);
+                        ctx.close();
                     } else {
                         issue(new BadOverrideError(method.pos, method.name, suspect.owner.name));
                     }
@@ -275,85 +244,26 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
         var formal = new FormalScope();
         typeMethod(method, ctx, formal);
-        if (method.type.noError()) {
-            var symbol = new MethodSymbol(method.name, method.type, formal, method.pos, method.modifiers,
-                    ctx.currentClass(), method.isAbstract());
-            ctx.declare(symbol);
-            method.symbol = symbol;
-            ctx.open(formal);
-            if (method.body.isPresent())
-                method.body.get().accept(this, ctx);
-            ctx.close();
-        }
+        var symbol = new MethodSymbol(method.name, method.type, formal, method.pos, method.modifiers,
+                ctx.currentClass());
+        ctx.declare(symbol);
+        method.symbol = symbol;
+        ctx.open(formal);
+        method.body.accept(this, ctx);
+        ctx.close();
     }
 
     private void typeMethod(Tree.MethodDef method, ScopeStack ctx, FormalScope formal) {
         method.returnType.accept(this, ctx);
-        if (method.returnType.type.noError()) {
-            ctx.open(formal);
-            if (!method.isStatic()) ctx.declare(VarSymbol.thisVar(ctx.currentClass().type, method.id.pos));
-            var argTypes = new ArrayList<Type>();
-            for (var param : method.params) {
-                param.accept(this, ctx);
-                argTypes.add(param.typeLit.type);
-            }
-            method.type = new FunType(method.returnType.type, argTypes);
-            ctx.close();
-        }
-    }
-
-    @Override public void visitLambda(Tree.Lambda lambda, ScopeStack ctx) {
-        // System.out.println(lambda.pos + "visitlambda namer:" + lambda);
-        var ls = new LambdaScope(ctx.currentScope());
-        FunType ty = typeLambda(lambda, ctx, ls);
-        lambda.symbol = new LambdaSymbol(lambda.name, ty, ls, lambda.pos);
-        LambdaSymbol symbol = (LambdaSymbol) lambda.symbol;
-        lambda.scope = ls;
-        ls.setOwner(symbol);
-        if (ty.noError()) {
-            ctx.declare(symbol);
-            ctx.open(ls);
-            if (lambda.ty == LambdaType.EXPR) {
-                var s = new LocalScope(ls);
-                ctx.open(s); 
-            }
-            lambda.ret.accept(this, ctx);
-            if (lambda.ty == LambdaType.EXPR) {
-                ctx.close();
-            }
-            ctx.close();
-        }
-    }
-
-    private FunType typeLambda(Tree.Lambda lambda, ScopeStack ctx, LambdaScope ls) {
-        ctx.open(ls);
+        ctx.open(formal);
+        if (!method.isStatic()) ctx.declare(VarSymbol.thisVar(ctx.currentClass().type, method.id.pos));
         var argTypes = new ArrayList<Type>();
-        for (var param: lambda.params) {
+        for (var param : method.params) {
             param.accept(this, ctx);
             argTypes.add(param.typeLit.type);
         }
+        method.type = new FunType(method.returnType.type, argTypes);
         ctx.close();
-        return new FunType(BuiltInType.VAR, argTypes);
-    }
-
-    @Override
-    public void visitTLambda(TLambda typeLambda, ScopeStack ctx) {
-        typeLambda.retType.accept(this, ctx);
-        var argTypes = new ArrayList<Type>();
-        boolean hasError = false;
-        for (var argType: typeLambda.argTypes) {
-            argType.accept(this, ctx);
-            if (argType instanceof TVoid) {
-                issue(new FunctionVoidArgError(argType.pos));
-                hasError = true;
-            }
-            argTypes.add(argType.type);
-        }
-        if (hasError) {
-            typeLambda.type = BuiltInType.ERROR;
-            return;
-        }
-        typeLambda.type = new FunType(typeLambda.retType.type, argTypes);
     }
 
     @Override
@@ -368,33 +278,23 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitLocalVarDef(Tree.LocalVarDef def, ScopeStack ctx) {
+        def.typeLit.accept(this, ctx);
+
         var earlier = ctx.findConflict(def.name);
         if (earlier.isPresent()) {
             issue(new DeclConflictError(def.pos, def.name, earlier.get().pos));
-        }
-        
-        def.typeLit.accept(this, ctx);
-        Type ty = def.typeLit.type;
-        if (ty.eq(BuiltInType.VOID)) {
-            issue(new BadVarTypeError(def.pos, def.name));
-        }
-        if (def.initVal.isPresent()  && def.initVal.get() instanceof Tree.Lambda) {
-            var symbol = new VarSymbol(def.name, ty, def.id.pos);
-            ctx.declare(symbol);
-            def.symbol = symbol;
-        }
-        if (def.initVal.isPresent())
-            def.initVal.get().accept(this, ctx);
-        if (earlier.isPresent())
             return;
+        }
+
+        if (def.typeLit.type.eq(BuiltInType.VOID)) {
+            issue(new BadVarTypeError(def.pos, def.name));
+            return;
+        }
+
         if (def.typeLit.type.noError()) {
-            var symbol = new VarSymbol(def.name, ty, def.id.pos);
+            var symbol = new VarSymbol(def.name, def.typeLit.type, def.id.pos);
             ctx.declare(symbol);
             def.symbol = symbol;
-            if (def.initVal.isPresent() && def.initVal.get() instanceof Tree.Lambda) {
-                var lb = (Tree.Lambda) def.initVal.get();
-                lb.scope.nestedLocalScope().lambdaDef = Optional.ofNullable(def.symbol);
-            }
         }
     }
 
@@ -403,7 +303,6 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
         loop.scope = new LocalScope(ctx.currentScope());
         ctx.open(loop.scope);
         loop.init.accept(this, ctx);
-        loop.cond.accept(this, ctx);
         for (var stmt : loop.body.stmts) {
             stmt.accept(this, ctx);
         }
@@ -412,77 +311,13 @@ public class Namer extends Phase<Tree.TopLevel, Tree.TopLevel> implements TypeLi
 
     @Override
     public void visitIf(Tree.If stmt, ScopeStack ctx) {
-        stmt.cond.accept(this, ctx);
         stmt.trueBranch.accept(this, ctx);
         stmt.falseBranch.ifPresent(b -> b.accept(this, ctx));
     }
 
     @Override
     public void visitWhile(Tree.While loop, ScopeStack ctx) {
-        loop.cond.accept(this, ctx);
         loop.body.accept(this, ctx);
-    }
-
-    @Override
-    public void visitCall(Call call, ScopeStack ctx) {
-        call.caller.accept(this, ctx);
-        for (var arg: call.args)
-            arg.accept(this, ctx);
-    }
-
-    @Override
-    public void visitAssign(Assign that, ScopeStack ctx) {
-        that.lhs.accept(this, ctx);
-        that.rhs.accept(this, ctx);
-    }
-
-    @Override
-    public void visitExprEval(ExprEval that, ScopeStack ctx) {
-        that.expr.accept(this, ctx);
-    }
-
-    @Override
-    public void visitReturn(Return that, ScopeStack ctx) {
-        that.expr.ifPresent(e->e.accept(this, ctx));
-    }
-
-    @Override
-    public void visitPrint(Print that, ScopeStack ctx) {
-        for (var e: that.exprs)
-            e.accept(this, ctx);
-    }
-
-
-    @Override
-    public void visitIndexSel(IndexSel that, ScopeStack ctx) {
-        that.array.accept(this, ctx);
-        that.index.accept(this, ctx);
-    }
-
-    @Override
-    public void visitUnary(Unary that, ScopeStack ctx) {
-        that.operand.accept(this, ctx);
-    }
-
-    @Override
-    public void visitBinary(Binary that, ScopeStack ctx) {
-        that.lhs.accept(this, ctx);
-        that.rhs.accept(this, ctx);
-    }
-
-    @Override
-    public void visitNewArray(NewArray that, ScopeStack ctx) {
-        that.length.accept(this, ctx);
-    }
-
-    @Override
-    public void visitClassTest(ClassTest that, ScopeStack ctx) {
-        that.obj.accept(this, ctx);
-    }
-
-    @Override
-    public void visitClassCast(ClassCast that, ScopeStack ctx) {
-        that.obj.accept(this, ctx);
     }
 
 }

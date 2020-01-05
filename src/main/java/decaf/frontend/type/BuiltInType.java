@@ -37,11 +37,6 @@ public final class BuiltInType extends Type {
     public static final BuiltInType VOID = new BuiltInType("void");
 
     /**
-     * Type {@code var}, localVarDef ONLY.
-     */
-    public static final BuiltInType VAR = new BuiltInType("var");
-
-    /**
      * Ill-typed, reserved for type checking. A well-typed program can never contain this.
      */
     public static final BuiltInType ERROR = new BuiltInType("Error");

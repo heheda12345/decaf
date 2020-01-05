@@ -1,12 +1,8 @@
 package decaf.frontend.symbol;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import decaf.frontend.scope.Scope;
 import decaf.frontend.tree.Pos;
 import decaf.frontend.type.Type;
-import decaf.lowlevel.instr.Temp;
 
 /**
  * Symbols.
@@ -24,7 +20,7 @@ public abstract class Symbol implements Comparable<Symbol> {
 
     public final String name;
 
-    public Type type;
+    public final Type type;
 
     public final Pos pos;
 
@@ -59,11 +55,6 @@ public abstract class Symbol implements Comparable<Symbol> {
         return false;
     }
 
-    public boolean isLambdaSymbol() {
-        return false;
-    }
-
-
     /**
      * Get string representation of a symbol, excluding the position.
      *
@@ -88,11 +79,4 @@ public abstract class Symbol implements Comparable<Symbol> {
     public int compareTo(Symbol that) {
         return this.pos.compareTo(that.pos);
     }
-
-    public abstract String getSymbolType();
-    
-    /**
-     * Temp, reserved for {@link decaf.frontend.tacgen.TacGen}.
-     */
-    public Temp temp;
 }

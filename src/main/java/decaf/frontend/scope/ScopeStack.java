@@ -70,11 +70,6 @@ public class ScopeStack {
         return currMethod;
     }
 
-    public Symbol currentFun() {
-        Objects.requireNonNull(currFun);
-        return currFun;
-    }
-
     /**
      * Open a scope.
      * <p>
@@ -94,10 +89,6 @@ public class ScopeStack {
         } else if (scope.isFormalScope()) {
             var formalScope = (FormalScope) scope;
             currMethod = formalScope.getOwner();
-            currFun = formalScope.getOwner();
-        } else if (scope.isLambdaScope()) {
-            var lambdaScope = (LambdaScope) scope;
-            currFun = lambdaScope.getOwner();
         }
         scopeStack.push(scope);
     }
@@ -115,21 +106,6 @@ public class ScopeStack {
         if (scope.isClassScope()) {
             while (!scopeStack.isEmpty()) {
                 scopeStack.pop();
-            }
-        } else if (scope.isFormalScope() || scope.isLambdaScope()) {
-            ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
-            while (iter.hasPrevious()) {
-                var s = iter.previous();
-                if (s.isFormalScope()) {
-                    var formalScope = (FormalScope) s;
-                    currMethod = formalScope.getOwner();
-                    currFun = formalScope.getOwner();
-                    break;
-                } else if (s.isLambdaScope()) {
-                    var lambdaScope = (LambdaScope) s;
-                    currFun = lambdaScope.getOwner();
-                    break;
-                }
             }
         }
     }
@@ -153,22 +129,7 @@ public class ScopeStack {
      * @return innermost found symbol before {@code pos} (if any)
      */
     public Optional<Symbol> lookupBefore(String key, Pos pos) {
-        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
-        // System.out.println("lookup before " + key + pos);
-        while (iter.hasPrevious()) {
-            var scope = iter.previous();
-            var symbol = scope.find(key);
-            if (scope.lambdaDef.isPresent()) {
-                Symbol sy = scope.lambdaDef.get();
-                if (sy.name.equals(key)) {
-                    return Optional.empty();
-                }
-            }
-            if (symbol.isPresent() && !(symbol.get().domain().isLocalScope() && symbol.get().pos.compareTo(pos) >= 0)) {
-                return symbol;
-            }
-        }
-        return global.find(key);
+        return findWhile(key, whatever -> true, s -> !(s.domain().isLocalScope() && s.pos.compareTo(pos) >= 0));
     }
 
     /**
@@ -185,40 +146,9 @@ public class ScopeStack {
      * @return innermost conflicting symbol (if any)
      */
     public Optional<Symbol> findConflict(String key) {
-        if (currentScope().isFormalOrLocalOrLambdaScope())
-            return findWhile(key, Scope::isFormalOrLocalOrLambdaScope, whatever -> true).or(() -> global.find(key));
-        return lookup(key);
-    }
-
-    public boolean canAssign(String key) {
-        boolean inLambdaScope = false;
-        boolean inClassScope = false;
-        boolean passLambda = false;
-        boolean inMiddle = false;
-        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
-        while (iter.hasPrevious()) {
-            var scope = iter.previous();
-            var symbol = scope.find(key);
-            if (symbol.isPresent()) {
-                if (!passLambda)
-                    inLambdaScope = true;
-                if (scope.isClassScope())
-                    inClassScope  = true;
-                else if (passLambda)
-                    inMiddle = true;
-            }
-            if (scope.isLambdaScope())
-                passLambda = true;
-        }
-        return !passLambda || inLambdaScope || (!inMiddle && inClassScope);
-    }
-
-    public void updateSymbol(String key, Symbol symbol) {
-        // System.out.println("update " + key + " type:" + symbol.type + "scope: " + currentScope());
         if (currentScope().isFormalOrLocalScope())
-            updateWhile(key, symbol, Scope::isFormalOrLocalScope, whatever -> true);
-        else
-            updateWhile(key, symbol, whatever -> true, whatever -> true);
+            return findWhile(key, Scope::isFormalOrLocalScope, whatever -> true).or(() -> global.find(key));
+        return lookup(key);
     }
 
     /**
@@ -264,7 +194,6 @@ public class ScopeStack {
     private Stack<Scope> scopeStack = new Stack<>();
     private ClassSymbol currClass;
     private MethodSymbol currMethod;
-    private Symbol currFun;
 
     private Optional<Symbol> findWhile(String key, Predicate<Scope> cond, Predicate<Symbol> validator) {
         ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
@@ -275,19 +204,5 @@ public class ScopeStack {
             if (symbol.isPresent() && validator.test(symbol.get())) return symbol;
         }
         return cond.test(global) ? global.find(key) : Optional.empty();
-    }
-
-    private void updateWhile(String key, Symbol newSymbol, Predicate<Scope> cond, Predicate<Symbol> validator) {
-        ListIterator<Scope> iter = scopeStack.listIterator(scopeStack.size());
-        while (iter.hasPrevious()) {
-            var scope = iter.previous();
-            if (!cond.test(scope)) break;
-            var symbol = scope.find(key);
-            if (symbol.isPresent() && validator.test(symbol.get())) {
-                scope.update(key, newSymbol);
-                return;
-            }
-        }
-        global.update(key, newSymbol);  // NOTE: global.update will be called regardless of cond
     }
 }

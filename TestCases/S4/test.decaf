@@ -1,0 +1,26 @@
+class Main {
+    int x;
+    int call1() {
+        return 1;
+    }
+    static int call2() {
+        return 2;
+    }
+
+    static void call(class Main m) {
+        int a1 = m.call1();
+        int a2 = call2();
+        int a3 = m.x;
+        int a4 = a3;
+        int a5 = a4;
+        string a6 = "abcd";
+        bool a7 = true;
+        bool a8 = !a7;
+        int a9 = a4 + a5;
+    }
+
+    static void main() {
+        class Main m = new Main();
+        call(m);
+    }
+}

@@ -72,18 +72,4 @@ public class VTable {
         }
         pw.println();
     }
-
-    public void print() {
-        System.out.println(label.prettyString() + ":");
-        if (parent.isPresent()) {
-            System.out.println("    " + parent.get().label.prettyString());
-        } else {
-            System.out.println("    NULL");
-        }
-        System.out.println("    \"" + className + "\"");
-        for (var l : memberMethods) {
-            System.out.println("    " + l.prettyString());
-        }
-        System.out.println();
-    }
 }

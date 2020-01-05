@@ -1,16 +1,12 @@
 package decaf.frontend.typecheck;
 
-import java.util.ArrayList;
-
 import decaf.driver.ErrorIssuer;
 import decaf.driver.error.BadArrElementError;
 import decaf.driver.error.ClassNotFoundError;
 import decaf.frontend.scope.ScopeStack;
 import decaf.frontend.tree.Tree;
 import decaf.frontend.tree.Visitor;
-import decaf.frontend.tree.Tree.TLambda;
 import decaf.frontend.type.BuiltInType;
-import decaf.frontend.type.Type;
 
 /**
  * Infer the types of type literals in the abstract syntax tree.
@@ -41,11 +37,6 @@ public interface TypeLitVisited extends Visitor<ScopeStack>, ErrorIssuer {
     }
 
     @Override
-    default void visitTVar(Tree.TVar that, ScopeStack ctx) {
-        that.type = BuiltInType.VAR;
-    }
-
-    @Override
     default void visitTClass(Tree.TClass typeClass, ScopeStack ctx) {
         var c = ctx.lookupClass(typeClass.id.name);
         if (c.isEmpty()) {
@@ -67,31 +58,6 @@ public interface TypeLitVisited extends Visitor<ScopeStack>, ErrorIssuer {
         } else {
             typeArray.type = new decaf.frontend.type.ArrayType(typeArray.elemType.type);
         }
-    }
-
-    @Override
-    default void visitTLambda(TLambda typeLambda, ScopeStack ctx) {
-        boolean isError = false;
-        ArrayList<Type> argTypes = new ArrayList<>();
-        for (var type: typeLambda.argTypes) {
-            type.accept(this, ctx);
-            argTypes.add(type.type);
-            if (type.type.eq(BuiltInType.ERROR))
-                isError = true;
-        }
-        typeLambda.retType.accept(this, ctx);
-        if (typeLambda.retType.type.eq(BuiltInType.ERROR))
-            isError = true;
-        for (var type: typeLambda.argTypes) {
-            if (type.type.eq(BuiltInType.VOID)) {
-                issue(new BadArrElementError(type.pos));
-                isError = true;
-            }
-        }
-        if (isError)
-            typeLambda.type = BuiltInType.ERROR;
-        else
-            typeLambda.type = new decaf.frontend.type.FunType(typeLambda.retType.type, argTypes);
     }
 
 }

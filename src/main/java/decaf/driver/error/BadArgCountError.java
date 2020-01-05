@@ -24,7 +24,7 @@ public class BadArgCountError extends DecafError {
 
     @Override
     protected String getErrMsg() {
-        return  method + " expects " + expect
+        return "function '" + method + "' expects " + expect
                 + " argument(s) but " + count + " given";
     }
 }

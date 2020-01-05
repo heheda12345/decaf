@@ -1,7 +1,6 @@
 package decaf.frontend.scope;
 
 import decaf.frontend.symbol.Symbol;
-import decaf.frontend.tree.Tree.Expr;
 
 import java.util.*;
 
@@ -24,14 +23,13 @@ import java.util.*;
 public abstract class Scope implements Iterable<Symbol> {
 
     public enum Kind {
-        GLOBAL, CLASS, FORMAL, LOCAL, LAMBDA
+        GLOBAL, CLASS, FORMAL, LOCAL
     }
 
     public final Kind kind;
 
     public Scope(Kind kind) {
         this.kind = kind;
-        this.lambdaDef = Optional.empty();
     }
 
     /**
@@ -74,30 +72,6 @@ public abstract class Scope implements Iterable<Symbol> {
         symbol.setDomain(this);
     }
 
-    public void capture(Expr expr) {
-        if (!symbols.containsKey(expr.symbol.name)) {
-            captured.put(expr.symbol.name, expr);
-        }
-    }
-    
-    public void captureNest(Scope scope) {
-        for (var s: scope.captured.values()) {
-            capture(s);
-        }
-    }
-
-    public Collection<String> getCapturedName() {
-        return captured.keySet();
-    }
-
-    public Collection<Expr> getCapturedExpr() {
-        return captured.values();
-    }
-
-    public void update(String key, Symbol symbol) {
-        symbols.put(key, symbol);
-    }
-
     @Override
     public Iterator<Symbol> iterator() {
         var list = new ArrayList<>(symbols.values());
@@ -125,20 +99,9 @@ public abstract class Scope implements Iterable<Symbol> {
         return false;
     }
 
-    public boolean isLambdaScope() {
-        return false;
-    }
-
     public boolean isFormalOrLocalScope() {
         return isFormalScope() || isLocalScope();
     }
 
-    public boolean isFormalOrLocalOrLambdaScope() {
-        return isFormalScope() || isLocalScope() || isLambdaScope();
-    }
-
-    public Optional<Symbol> lambdaDef;
-
     protected Map<String, Symbol> symbols = new TreeMap<>();
-    protected Map<String, Expr> captured = new TreeMap<>();
 }

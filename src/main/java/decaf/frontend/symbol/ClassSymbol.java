@@ -16,29 +16,26 @@ public final class ClassSymbol extends Symbol {
 
     public final Optional<ClassSymbol> parentSymbol;
 
-    public ClassType type;
+    public final ClassType type;
 
     /**
      * Associated class scope of this class.
      */
     public final ClassScope scope;
-    public final boolean isAbstract;
 
-    public ClassSymbol(String name, ClassType type, ClassScope scope, Pos pos, boolean isAbstract) {
+    public ClassSymbol(String name, ClassType type, ClassScope scope, Pos pos) {
         super(name, type, pos);
         this.parentSymbol = Optional.empty();
         this.scope = scope;
         this.type = type;
-        this.isAbstract = isAbstract;
         scope.setOwner(this);
     }
 
-    public ClassSymbol(String name, ClassSymbol parentSymbol, ClassType type, ClassScope scope, Pos pos, boolean isAbstract) {
+    public ClassSymbol(String name, ClassSymbol parentSymbol, ClassType type, ClassScope scope, Pos pos) {
         super(name, type, pos);
         this.parentSymbol = Optional.of(parentSymbol);
         this.scope = scope;
         this.type = type;
-        this.isAbstract = isAbstract;
         scope.setOwner(this);
     }
 
@@ -70,7 +67,7 @@ public final class ClassSymbol extends Symbol {
 
     @Override
     protected String str() {
-        return (isAbstract?"ABSTRACT " : "") + "class " + name + parentSymbol.map(classSymbol -> " : " + classSymbol.name).orElse("");
+        return "class " + name + parentSymbol.map(classSymbol -> " : " + classSymbol.name).orElse("");
     }
 
     /**
@@ -99,11 +96,6 @@ public final class ClassSymbol extends Symbol {
 
         return new ClassInfo(name, parentSymbol.map(symbol -> symbol.name), memberVariables, memberMethods,
                 staticMethods, isMainClass());
-    }
-
-    @Override
-    public String getSymbolType() {
-        return " ClassSymbol ";
     }
 
     private boolean main;

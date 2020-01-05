@@ -22,12 +22,9 @@ import java.util.Optional;
 %token BOOL_LIT     INT_LIT     STRING_LIT
 %token IDENTIFIER   AND         OR          STATIC      INSTANCE_OF
 %token LESS_EQUAL   GREATER_EQUAL           EQUAL       NOT_EQUAL
-%token ARROW
-%token ABSTRACT     VAR         FUN
 %token '+'  '-'  '*'  '/'  '%'  '='  '>'  '<'  '.'
 %token ','  ';'  '!'  '('  ')'  '['  ']'  '{'  '}'
 
-%nonassoc ARROW
 %left OR
 %left AND
 %left EQUAL NOT_EQUAL
@@ -72,11 +69,7 @@ ClassList       :   ClassList ClassDef
 
 ClassDef        :   CLASS Id ExtendsClause '{' FieldList '}'
                     {
-                        $$ = svClass(new ClassDef($2.id, Optional.ofNullable($3.id), $5.fieldList, $1.pos, false));
-                    }
-                |   ABSTRACT CLASS Id ExtendsClause '{' FieldList '}'
-                    {
-                        $$ = svClass(new ClassDef($3.id, Optional.ofNullable($4.id), $6.fieldList, $2.pos, true));
+                        $$ = svClass(new ClassDef($2.id, Optional.ofNullable($3.id), $5.fieldList, $1.pos));
                     }
                 ;
 
@@ -106,11 +99,6 @@ FieldList       :   FieldList Var ';'
                     }
                 ;
 
-VarVAR          :   TypeVAR Id 
-                    {
-                        $$ = svVar($1.type, $2.id, $2.pos);
-                    }
-                ;
 Var             :   Type Id
                     {
                         $$ = svVar($1.type, $2.id, $2.pos);
@@ -119,15 +107,11 @@ Var             :   Type Id
 
 MethodDef       :   STATIC Type Id '(' VarList ')' Block
                     {
-                        $$ = svField(new MethodDef(true, $3.id, $2.type, $5.varList, Optional.ofNullable($7.block), $3.pos, false));
+                        $$ = svField(new MethodDef(true, $3.id, $2.type, $5.varList, $7.block, $3.pos));
                     }
                 |   Type Id '(' VarList ')' Block
                     {
-                        $$ = svField(new MethodDef(false, $2.id, $1.type, $4.varList, Optional.ofNullable($6.block), $2.pos, false));
-                    }
-                |   ABSTRACT Type Id '(' VarList ')' ';'
-                    {
-                        $$ = svField(new MethodDef(false, $3.id, $2.type, $5.varList, Optional.ofNullable(null), $3.pos, true));
+                        $$ = svField(new MethodDef(false, $2.id, $1.type, $4.varList, $6.block, $2.pos));
                     }
                 ;
 
@@ -154,11 +138,6 @@ VarList1        :   VarList1 ',' Var
 
 // Types
 
-TypeVAR         :   VAR
-                    {
-                        $$ = svType(new TVar($1.pos));
-                    }
-                    ;
 Type            :   INT
                     {
                         $$ = svType(new TInt($1.pos));
@@ -182,29 +161,6 @@ Type            :   INT
                 |   Type '[' ']'
                     {
                         $$ = svType(new TArray($1.type, $1.type.pos));
-                    }
-                |   Type '(' TypeList ')'
-                    {
-                        $$ = svType(new TLambda($1.type, $3.typeList));
-                    }
-                ;
-TypeList        :   TypeList1
-                    {
-                        $$ = $1;
-                    }
-                |   /* empty */
-                    {
-                        $$ = svTypes();
-                    }
-                ;
-TypeList1        :  TypeList1 ',' Type
-                    {
-                        $$ = $1;
-                        $$.typeList.add($3.type);
-                    }
-                |   Type
-                    {
-                        $$ = svTypes($1.type);
                     }
                 ;
 
@@ -283,18 +239,8 @@ SimpleStmt      :   Var Initializer
                     {
                         $$ = svStmt(null);
                     }
-                |   VarVAR InitializerNotNULL
-                    {
-                        $$ = svStmt(new LocalVarDef($1.type, $1.id, $2.pos, Optional.ofNullable($2.expr), $1.pos));
-                    } 
                 ;
 
-InitializerNotNULL : '=' Expr
-                    {
-                        $$ = svExpr($2.expr);
-                        $$.pos = $1.pos;
-                    }
-                ;
 Initializer     :   '=' Expr
                     {
                         $$ = svExpr($2.expr);
@@ -340,9 +286,9 @@ Expr            :   Literal
                     {
                         $$ = svExpr($1.lValue);
                     }
-                |   Expr '(' ExprList ')'
+                |   Receiver Id '(' ExprList ')'
                     {
-                        $$ = svExpr(new Call($1.expr, $3.exprList, $2.pos));
+                        $$ = svExpr(new Call(Optional.ofNullable($1.expr), $2.id, $4.exprList, $3.pos));
                     }
                 |   Expr '+' Expr
                     {
@@ -431,14 +377,6 @@ Expr            :   Literal
                 |   '(' CLASS Id ')' Expr   %prec CAST
                     {
                         $$ = svExpr(new ClassCast($5.expr, $3.id, $5.expr.pos));
-                    }
-                |   FUN '(' VarList ')' ARROW Expr
-                    {
-                        $$ = svExpr(new Lambda($3.varList, $6.expr, $1.pos));
-                    }
-                |   FUN '(' VarList ')' Block
-                    {
-                        $$ = svExpr(new Lambda($3.varList, $5.block, $1.pos));
                     }
                 ;
 

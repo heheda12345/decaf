@@ -42,15 +42,11 @@ public final class VarSymbol extends Symbol {
     }
 
     public boolean isParam() {
-        return definedIn.isFormalScope() || definedIn.isLambdaScope();
+        return definedIn.isFormalScope();
     }
 
     public boolean isMemberVar() {
         return definedIn.isClassScope();
-    }
-
-    public boolean isLambdaVar() {
-        return definedIn.isLambdaScope();
     }
 
     /**
@@ -66,9 +62,8 @@ public final class VarSymbol extends Symbol {
         return ((ClassScope) definedIn).getOwner();
     }
 
-    @Override
-    public String getSymbolType() {
-        return " VarSymbol ";
-    }
-
+    /**
+     * Temp, reserved for {@link decaf.frontend.tacgen.TacGen}.
+     */
+    public Temp temp;
 }

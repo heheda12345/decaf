@@ -18,7 +18,6 @@ public interface ErrorIssuer {
      * @param error Decaf error
      */
     default void issue(DecafError error) {
-        System.out.println(error.toString());
         errors.add(error);
     }
 
