@@ -321,7 +321,7 @@ public interface TacEmitter extends Visitor<FuncVisitor> {
         if (expr.obj.type.subtypeOf(expr.symbol.type)) {
             return;
         }
-        var result = emitClassTest(expr.obj.val, expr.symbol.name, mv);
+        // var result = emitClassTest(expr.obj.val, expr.symbol.name, mv);
 
         /* Pseudo code:
          * <pre>
