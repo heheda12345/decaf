@@ -7,7 +7,7 @@ plugins {
 
 group 'decaf'
 
-sourceCompatibility = JavaVersion.VERSION_12
+// sourceCompatibility = JavaVersion.VERSION_12
 
 sourceSets.main.java.srcDirs += files("$project.buildDir/generated-src/ll1pg")
 

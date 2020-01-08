@@ -27,3 +27,4 @@ TestCases/
 test.sh
 output
 *.tac
+test.s
