@@ -39,11 +39,14 @@ public final class GraphColorRegAlloc extends RegAlloc {
         for (int i = 0; i < info.numArg; i++) {
             g.addNode(i);
         }
+        for (int i = 0; i < info.numArg; i++)
+            for (int j = 0; j < info.numArg; j++)
+                g.addEdge(i, j);
         for (var bb: graph) {
             for (var temp: bb.def)
-            g.addNode(temp.index);
+                g.addNode(temp.index);
             for (var temp: bb.liveIn)
-            g.addNode(temp.index);
+                g.addNode(temp.index);
             for (var temp1: bb.liveIn) {
                 for (var temp2: bb.liveIn)
                     g.addEdge(temp1.index, temp2.index);
@@ -67,7 +70,7 @@ public final class GraphColorRegAlloc extends RegAlloc {
         for (int i = 0; i < info.numArg; i++) {
             Temp arg = new Temp(i);
             Reg reg = g.getColor(arg);
-            subEmitter.emitLoadFromStack(reg, arg);
+            subEmitter.emitLoadArg(reg, i);
             bind(arg, reg);
         }
         for (var bb : graph) {

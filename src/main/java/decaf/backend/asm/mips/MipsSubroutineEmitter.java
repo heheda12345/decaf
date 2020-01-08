@@ -80,6 +80,11 @@ public class MipsSubroutineEmitter extends SubroutineEmitter {
     }
 
     @Override
+    public void emitLoadArg(Reg dst, int argID) {
+        emitMove(dst, Mips.argRegs[argID]);
+    }
+
+    @Override
     public void emitNative(NativeInstr instr) {
         buf.add(instr);
     }
@@ -107,10 +112,10 @@ public class MipsSubroutineEmitter extends SubroutineEmitter {
         printer.println();
 
         printer.printComment("start of body");
-        for (var i = 0; i < Math.min(info.numArg, 4); i++) {
-            printer.printInstr(new Mips.NativeStoreWord(Mips.argRegs[i], Mips.SP, 4 * i),
-                    "save arg " + i);
-        }
+        // for (var i = 0; i < Math.min(info.numArg, 4); i++) {
+        //     printer.printInstr(new Mips.NativeStoreWord(Mips.argRegs[i], Mips.SP, 4 * i),
+        //             "save arg " + i);
+        // }
         for (var instr : buf) {
             printer.printInstr(instr);
         }

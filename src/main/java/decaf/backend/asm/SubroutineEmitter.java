@@ -39,6 +39,8 @@ public abstract class SubroutineEmitter {
      */
     public abstract void emitMove(Reg dst, Reg src);
 
+    public abstract void emitLoadArg(Reg dst, int argID);
+
     /**
      * Append a given assembly instruction.
      *
