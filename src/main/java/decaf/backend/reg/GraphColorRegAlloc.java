@@ -10,9 +10,11 @@ import decaf.backend.dataflow.Loc;
 import decaf.lowlevel.instr.PseudoInstr;
 import decaf.lowlevel.instr.Reg;
 import decaf.lowlevel.instr.Temp;
+import decaf.lowlevel.log.Log;
+import decaf.printing.PrettyCFG;
 
 import java.util.*;
-
+import java.util.logging.*;
 /**
  * Brute force greedy register allocation algorithm.
  * <p>
@@ -25,11 +27,49 @@ public final class GraphColorRegAlloc extends RegAlloc {
         for (var reg : emitter.allocatableRegs) {
             reg.used = false;
         }
+        g = new ColorGraph(emitter.allocatableRegs);
     }
+
+    private ColorGraph g;
 
     @Override
     public void accept(CFG<PseudoInstr> graph, SubroutineInfo info) {
+        Log.ifLoggable(Level.INFO, printer -> new PrettyCFG<>(printer).pretty(graph));
+        g.init(info);
+        for (int i = 0; i < info.numArg; i++) {
+            g.addNode(i);
+        }
+        for (var bb: graph) {
+            for (var temp: bb.def)
+            g.addNode(temp.index);
+            for (var temp: bb.liveIn)
+            g.addNode(temp.index);
+            for (var temp1: bb.liveIn) {
+                for (var temp2: bb.liveIn)
+                    g.addEdge(temp1.index, temp2.index);
+            }
+            for (var loc: bb.locs) {
+                for (var dst: loc.instr.dsts) {
+                    for (var out: loc.liveOut) {
+                        g.addEdge(out.index, dst.index);
+                        g.addEdge(dst.index, out.index);
+                    }
+                }
+            } 
+        }
+        g.color();
+
+        bindings.clear();
+        for (var reg : emitter.allocatableRegs) {
+            reg.occupied = false;
+        }
         var subEmitter = emitter.emitSubroutine(info);
+        for (int i = 0; i < info.numArg; i++) {
+            Temp arg = new Temp(i);
+            Reg reg = g.getColor(arg);
+            subEmitter.emitLoadFromStack(reg, arg);
+            bind(arg, reg);
+        }
         for (var bb : graph) {
             bb.label.ifPresent(subEmitter::emitLabel);
             localAlloc(bb, subEmitter);
@@ -41,55 +81,26 @@ public final class GraphColorRegAlloc extends RegAlloc {
 
     private void bind(Temp temp, Reg reg) {
         reg.used = true;
-
         bindings.put(temp, reg);
         reg.occupied = true;
         reg.temp = temp;
     }
 
-    private void unbind(Temp temp) {
-        if (bindings.containsKey(temp)) {
-            bindings.get(temp).occupied = false;
-            bindings.remove(temp);
-        }
-    }
-
-    /**
-     * Main algorithm of local register allocation à la brute-force. Basic idea:
-     * <ul>
-     *     <li>Allocation is preformed block-by-block.</li>
-     *     <li>Assume that every allocatable register is unoccupied before entering every basic block.</li>
-     *     <li>For every read (src) and written (dst) temp {@code t} in every pseudo instruction, attempt the following
-     *     in order:</li>
-     *     <li><ol>
-     *         <li>{@code t} is already bound to a register: keep on using it.</li>
-     *         <li>If there exists an available (unoccupied, or the occupied temp is no longer alive) register,
-     *         then bind to it.</li>
-     *         <li>Arbitrarily pick a general register, spill its value to stack, and then bind to it.</li>
-     *     </ol></li>
-     * </ul>
-     * <p>
-     * The output assembly code is maintained by {@code emitter}.
-     *
-     * @param bb         the basic block which the algorithm performs on
-     * @param subEmitter the current subroutine emitter
-     * @see #allocRegFor
-     */
     private void localAlloc(BasicBlock<PseudoInstr> bb, SubroutineEmitter subEmitter) {
-        bindings.clear();
-        for (var reg : emitter.allocatableRegs) {
-            reg.occupied = false;
-        }
-
         var callerNeedSave = new ArrayList<Reg>();
-
         for (var loc : bb.allSeq()) {
             // Handle special instructions on caller save/restore.
-
             if (loc.instr instanceof HoleInstr) {
                 if (loc.instr.equals(HoleInstr.CallerSave)) {
-                    for (var reg : emitter.callerSaveRegs) {
-                        if (reg.occupied && loc.liveOut.contains(reg.temp)) {
+                    for (var temp: loc.liveOut) {
+                        var reg = g.getColor(temp);
+                        boolean callerSave = false;
+                        for (var r: emitter.callerSaveRegs)
+                            if (reg.index == r.index) {
+                                callerSave = true;
+                                break;
+                            }
+                        if (callerSave) {
                             callerNeedSave.add(reg);
                             subEmitter.emitStoreToStack(reg);
                         }
@@ -113,11 +124,11 @@ public final class GraphColorRegAlloc extends RegAlloc {
 
         // Before we leave a basic block, we must copy values of all live variables from registers (if exist)
         // to stack, as all these registers will be reset (as unoccupied) when entering another basic block.
-        for (var temp : bb.liveOut) {
-            if (bindings.containsKey(temp)) {
-                subEmitter.emitStoreToStack(bindings.get(temp));
-            }
-        }
+        // for (var temp : bb.liveOut) {
+        //     if (bindings.containsKey(temp)) {
+        //         subEmitter.emitStoreToStack(bindings.get(temp));
+        //     }
+        // }
 
         // Handle the last instruction, if it is a branch/return block.
         if (!bb.isEmpty() && !bb.kind.equals(BasicBlock.Kind.CONTINUOUS)) {
@@ -126,76 +137,22 @@ public final class GraphColorRegAlloc extends RegAlloc {
     }
 
     private void allocForLoc(Loc<PseudoInstr> loc, SubroutineEmitter subEmitter) {
+        // System.out.printf("handle %s\n", loc.instr);
         var instr = loc.instr;
         var srcRegs = new Reg[instr.srcs.length];
         var dstRegs = new Reg[instr.dsts.length];
 
         for (var i = 0; i < instr.srcs.length; i++) {
-            var temp = instr.srcs[i];
-            if (temp instanceof Reg) {
-                srcRegs[i] = (Reg) temp;
-            } else {
-                srcRegs[i] = allocRegFor(temp, true, loc.liveIn, subEmitter);
-            }
+            srcRegs[i] = g.getColor(instr.srcs[i]);
+            // System.out.printf("src %s: %s\n", instr.srcs[i], srcRegs[i]);
         }
-
+        
         for (var i = 0; i < instr.dsts.length; i++) {
-            var temp = instr.dsts[i];
-            if (temp instanceof Reg) {
-                dstRegs[i] = ((Reg) temp);
-            } else {
-                dstRegs[i] = allocRegFor(temp, false, loc.liveIn, subEmitter);
-            }
+            dstRegs[i] = g.getColor(instr.dsts[i]);
+            bind(instr.dsts[i], dstRegs[i]);
+            // System.out.printf("dst %s: %s\n", instr.dsts[i], dstRegs[i]);
         }
 
         subEmitter.emitNative(instr.toNative(dstRegs, srcRegs));
     }
-
-    /**
-     * Allocate a register for a temp.
-     *
-     * @param temp       temp appeared in the pseudo instruction
-     * @param isRead     true = read, false = write
-     * @param live       set of live temps before executing this instruction
-     * @param subEmitter current subroutine emitter
-     * @return register for use
-     */
-    private Reg allocRegFor(Temp temp, boolean isRead, Set<Temp> live, SubroutineEmitter subEmitter) {
-        // Best case: the value of `temp` is already in register.
-        if (bindings.containsKey(temp)) {
-            return bindings.get(temp);
-        }
-
-        // First attempt: find an unoccupied register, or one whose value is no longer alive at this location.
-        for (var reg : emitter.allocatableRegs) {
-            if (!reg.occupied || !live.contains(reg.temp)) {
-                if (isRead) {
-                    // Since `reg` is uninitialized, we must load the latest value of `temp`, from stack, to `reg`.
-                    subEmitter.emitLoadFromStack(reg, temp);
-                }
-                if (reg.occupied) {
-                    unbind(reg.temp);
-                }
-                bind(temp, reg);
-                return reg;
-            }
-        }
-
-        // Last attempt: all registers are occupied, so we have to spill one of them.
-        // To avoid the situation where the first register is consecutively spilled, a reasonable heuristic
-        // is to randomize our choice among all of them.
-        var reg = emitter.allocatableRegs[random.nextInt(emitter.allocatableRegs.length)];
-        subEmitter.emitStoreToStack(reg);
-        unbind(reg.temp);
-        bind(temp, reg);
-        if (isRead) {
-            subEmitter.emitLoadFromStack(reg, temp);
-        }
-        return reg;
-    }
-
-    /**
-     * Random number generator.
-     */
-    private Random random = new Random();
 }

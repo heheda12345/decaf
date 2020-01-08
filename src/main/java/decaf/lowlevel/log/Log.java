@@ -95,6 +95,10 @@ public class Log {
         format(Level.WARNING, fmt, args);
     }
 
+    public static boolean isLoggable(Level level) {
+        return L.isLoggable(level);
+    }
+
     /**
      * Wrapper of {@link #format} when log level is {@link Level#INFO}.
      */
